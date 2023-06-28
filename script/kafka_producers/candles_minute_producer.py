@@ -33,7 +33,7 @@ logger.setLevel(20)
 # Set Kafka config #
 ###################
 kafka_conf = {
-    'bootstrap.servers':"172.29.0.9:9092"
+    'bootstrap.servers':"172.29.0.6:9092"
     }
 
 # set a producer

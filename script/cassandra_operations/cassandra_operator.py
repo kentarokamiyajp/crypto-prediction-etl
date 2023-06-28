@@ -10,7 +10,7 @@ class Operator:
             username='kamiken',
             password='kamiken')
 
-        self.cluster = Cluster(['172.29.0.11'],
+        self.cluster = Cluster(['172.29.0.2'],
                           port=9042,
                           auth_provider=auth_provider)
         self.session = self.cluster.connect(keyspace)
