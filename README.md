@@ -1,2 +1,2 @@
-# crypto_prediction_modules
-modules to predict crypto future price with AI models
+# crypto_prediction_dwh
+DWH for crypto future price prediction with AI models
