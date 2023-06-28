@@ -3,7 +3,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import datetime
 import subprocess
 
-base_dir = '/home/kamiken/hadoop_project/crypto/script/spark_streaming'
+base_dir = '/home/kamiken/git/crypto_prediction_dwh/script/spark_streaming'
 
 curr_date = datetime.date.today().strftime("%Y%m%d")
 curr_timestamp = str(datetime.datetime.now()).replace(' ','_')
