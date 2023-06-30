@@ -51,7 +51,7 @@ c.subscribe([target_topic])
 # Set Cassandra Operator #
 ##########################
 keyspace = 'crypto'
-table_name = 'candles_minute'
+table_name = 'candles_minute_realtime'
 cass_ope = cassandra_operator.Operator(keyspace)
 
 insert_query = f"""
