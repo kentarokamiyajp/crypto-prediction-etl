@@ -1,1 +1,3 @@
 script/*.icloud
+script/airflow/dags/__pycache__/*
+script/airflow/dags/modules/__pycache__/*
