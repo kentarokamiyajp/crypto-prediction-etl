@@ -1,3 +1,5 @@
 script/*.icloud
 script/airflow/dags/__pycache__/*
 script/airflow/dags/modules/__pycache__/*
+script/poloniex_apis/__pycache__/*
+script/cassandra_operations/__pycache__/*

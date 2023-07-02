@@ -15,5 +15,6 @@ CREATE TABLE IF NOT EXISTS candles_minute (
     startTime bigint,
     closeTime bigint,
     dt varchar,
-    PRIMARY KEY ((id,dt),ts)
+    ts_insert_utc timestamp,
+    PRIMARY KEY ((id,dt),startTime,closeTime)
   );
