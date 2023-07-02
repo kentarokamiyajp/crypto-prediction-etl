@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from confluent_kafka import Producer
 import json
 import time
-from datetime import datetime
+from datetime import datetime,date
 import logging
 from pprint import pprint
 from poloniex_apis import get_request
@@ -45,6 +45,11 @@ def receipt(err, msg):
     else:
         message = "Produced message on topic {} with value of {}\n".format(msg.topic(), msg.value().decode("utf-8"))
 
+def get_dt(dt_unix_time):
+    dt_with_time = datetime.fromtimestamp(int(dt_unix_time) / 1000.0)
+    dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime("%Y-%m-%d")
+    return dt
+    
 
 ########
 # Main #
@@ -108,7 +113,7 @@ def main():
                         "interval": data[11],
                         "startTime": data[12],
                         "closeTime": data[13],
-                        "dt": str(datetime.fromtimestamp(int(data[12]) / 1000.0).strftime("%Y-%m-%d %H:%M:%S.%f"))[:10],
+                        "dt": get_dt(data[12])
                     }
                     for data in raw_candle_data
                 ]
