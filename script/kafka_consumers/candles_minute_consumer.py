@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timezone
 import logging
 from pprint import pprint
-
+from modules import utils
 from cassandra_operations import cassandra_operator
 
 ###################
@@ -31,6 +31,12 @@ logger.setLevel(20)
 ####################
 def error_cb(error):
     print(error)
+
+
+def task_failure_alert():
+    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    message = f"{ts_now} [Failed] Kafka consumer: candles_minute_consumer.py"
+    utils.send_line_message(message)
 
 
 kafka_conf = {"bootstrap.servers": "172.29.0.6:9092", "group.id": "candles-minute-consumer", "auto.offset.reset": "latest", "error_cb": error_cb}
@@ -95,6 +101,7 @@ def main():
         except Exception as error:
             logger.error("Kafka producer failed !!!")
             logger.error("Error:".format(error))
+            task_failure_alert()
             c.close()
 
 

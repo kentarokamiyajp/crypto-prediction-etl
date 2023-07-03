@@ -4,10 +4,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from confluent_kafka import Producer
 import json
 import time
-from datetime import datetime,date
+from datetime import datetime, date
 import logging
 from pprint import pprint
 from poloniex_apis import get_request
+from modules import utils
 
 polo_operator = get_request.PoloniexOperator()
 
@@ -45,11 +46,18 @@ def receipt(err, msg):
     else:
         message = "Produced message on topic {} with value of {}\n".format(msg.topic(), msg.value().decode("utf-8"))
 
+
 def get_dt(dt_unix_time):
     dt_with_time = datetime.fromtimestamp(int(dt_unix_time) / 1000.0)
     dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime("%Y-%m-%d")
     return dt
-    
+
+
+def task_failure_alert():
+    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py"
+    utils.send_line_message(message)
+
 
 ########
 # Main #
@@ -92,6 +100,7 @@ def main():
                 logger.warning("API ERROR: Could not get candle data")
                 logger.warning(f"Retry Requst: {retry_count}")
                 if retry_count == max_retry_count:
+                    task_failure_alert()
                     sys.exit(1)
                 time.sleep(10)
 
@@ -113,7 +122,7 @@ def main():
                         "interval": data[11],
                         "startTime": data[12],
                         "closeTime": data[13],
-                        "dt": get_dt(data[12])
+                        "dt": get_dt(data[12]),
                     }
                     for data in raw_candle_data
                 ]
