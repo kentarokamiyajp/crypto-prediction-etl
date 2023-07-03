@@ -1,4 +1,6 @@
 import sys
+
+sys.path.append("..")
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
@@ -6,17 +8,18 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
 import time
-import env_settings
+from dwh_script.modules.utils import *
+from modules import poloniex_operation, cassandra_operation, utils
 import logging
 
 logger = logging.getLogger(__name__)
 
-from modules import poloniex_operation, cassandra_operation, utils
 
 def task_failure_alert(context):
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Failed] D_Load_candles_day"
-    utils.send_line_message(message, env_settings.LINE_ACCESS_TOKEN)
+    message = f"{ts_now} [Failed] Airflow Dags: D_Load_candles_day"
+    send_line_message(message)
+
 
 def _get_candle_data():
     assets = [

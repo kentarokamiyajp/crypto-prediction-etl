@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, date
 import requests
 
+
 def process_candle_data_from_poloniex(data):
     batch_data = []
     for asset_name, asset_data in data.items():
@@ -29,11 +30,3 @@ def process_candle_data_from_poloniex(data):
                 ]
             )
     return batch_data
-
-def send_line_message(message, LINE_ACCESS_TOKEN):
-    url = "https://notify-api.line.me/api/notify"
-    access_token = LINE_ACCESS_TOKEN
-    headers = {'Authorization': 'Bearer ' + access_token}
-
-    payload = {'message': message}
-    requests.post(url, headers=headers, params=payload,)
