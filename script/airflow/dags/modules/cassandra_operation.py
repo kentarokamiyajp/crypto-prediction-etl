@@ -4,7 +4,7 @@ from dwh_script.cassandra_operations import cassandra_operator
 def insert_data(keyspace, table_name, candle_data):
     cass_ope = cassandra_operator.Operator(keyspace)
 
-    batch_size = 1000
+    batch_size = 100
     curr_index = 0
     while curr_index < len(candle_data):
         insert_query = f"""
