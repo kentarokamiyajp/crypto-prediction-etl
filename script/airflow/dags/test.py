@@ -34,7 +34,7 @@ def check_pwd():
     logger.info(res)
 
 
-with DAG("test", description="DAG test", schedule_interval=None, start_date=datetime(2023, 1, 1), catchup=False) as dag:
+with DAG("test", description="DAG test", schedule_interval=None, start_date=datetime(2023, 1, 1), catchup=False, tags=["test"]) as dag:
     create_file_task = PythonOperator(task_id="create_file", python_callable=create_file)
 
     delete_file_task = PythonOperator(task_id="delete_file", python_callable=delete_file)

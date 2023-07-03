@@ -3,12 +3,18 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime
 import time
-
+import env_settings
 import logging
 
 logger = logging.getLogger(__name__)
 
 from modules import poloniex_operation, cassandra_operation, utils
+
+
+def task_failure_alert(context):
+    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    message = f"{ts_now} [Failed] D_Load_candles_minute"
+    utils.send_line_message(message, env_settings.LINE_ACCESS_TOKEN)
 
 
 def _get_candle_data():
@@ -42,7 +48,6 @@ def _get_candle_data():
             else:
                 res[asset] = candle_data
             time.sleep(10)
-
     return res
 
 
@@ -67,6 +72,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
+    on_failure_callback=task_failure_alert,
     tags=["D_Load", "candle"],
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
