@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def task_completed_notification(context):
+def task_completed_notification():
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"{ts_now} [Completed] Airflow Dags: D_Load_candles_minute"
     send_line_message(message)
