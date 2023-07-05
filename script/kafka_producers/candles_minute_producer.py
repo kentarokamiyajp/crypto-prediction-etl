@@ -1,12 +1,12 @@
 import os, sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from confluent_kafka import Producer
+from confluent_kafka import admin, Producer
 import json
 import time
 from datetime import datetime, date
 import logging
-from pprint import pprint
+import random
 from poloniex_apis import get_request
 from modules import utils
 
@@ -33,7 +33,25 @@ logger.setLevel(20)
 ###################
 # Set Kafka config #
 ###################
-kafka_conf = {"bootstrap.servers": "172.29.0.6:9092"}
+kafka_conf = {"bootstrap.servers": "172.29.0.21:9081,172.29.0.22:9082,172.29.0.23:9083"}
+
+# Create an instance of the AdminClient
+admin_client = admin.AdminClient(kafka_conf)
+
+# Define the topic configuration
+target_topic = 'crypto.candles_minute'
+num_partitions = 3
+replication_factor = 2
+
+# Create a NewTopic object
+new_topic = admin.NewTopic(
+    topic=target_topic,
+    num_partitions=num_partitions,
+    replication_factor=replication_factor
+)
+
+# Create the topic using the AdminClient
+admin_client.create_topics([new_topic])
 
 # set a producer
 p = Producer(kafka_conf)
@@ -85,8 +103,6 @@ def main():
     end = time.time()
     start = end - 60 * period
 
-    target_topic = "crypto.candles_minute"
-
     retry_count = 0
     max_retry_count = 5
     while True:
@@ -129,9 +145,8 @@ def main():
             }
 
             m = json.dumps(candle_data)
-            p.produce(target_topic, m.encode("utf-8"), callback=receipt)
+            p.produce(target_topic, value = m.encode("utf-8"), partition=random.randint(0,num_partitions-1), callback=receipt)
             time.sleep(10)
-
 
 if __name__ == "__main__":
     main()

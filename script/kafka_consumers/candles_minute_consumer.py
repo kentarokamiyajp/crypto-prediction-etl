@@ -39,7 +39,12 @@ def task_failure_alert():
     utils.send_line_message(message)
 
 
-kafka_conf = {"bootstrap.servers": "172.29.0.6:9092", "group.id": "candles-minute-consumer", "auto.offset.reset": "latest", "error_cb": error_cb}
+kafka_conf = {
+    "bootstrap.servers": "172.29.0.21:9081,172.29.0.22:9082,172.29.0.23:9083",
+    "group.id": "candles-minute-consumer",
+    "auto.offset.reset": "latest",
+    "error_cb": error_cb,
+}
 
 target_topic = "crypto.candles_minute"
 
