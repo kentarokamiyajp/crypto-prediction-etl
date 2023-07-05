@@ -14,3 +14,7 @@ def send_line_message(message):
         headers=headers,
         params=payload,
     )
+
+if __name__=="__main__":
+    message = 'Notification Test'
+    send_line_message(message)
