@@ -1,6 +1,8 @@
 from datetime import datetime, timezone, date
-import requests
 
+
+def get_ts_now():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 def process_candle_data_from_poloniex(data):
     batch_data = []
@@ -26,7 +28,30 @@ def process_candle_data_from_poloniex(data):
                     int(d[12]),
                     int(d[13]),
                     dt,
-                    datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                    get_ts_now(),
+                ]
+            )
+    return batch_data
+
+def process_yahoofinancials_data(data):
+    batch_data = []
+    for symbol_name, data in data.items():
+        currency = data['currency']
+        prices = data['prices']
+        for p in prices:
+            batch_data.append(
+                [
+                    symbol_name,
+                    float(p['low']),
+                    float(p['high']),
+                    float(p['open']),
+                    float(p['close']),
+                    float(p['volume']),
+                    float(p['adjclose']),
+                    currency,
+                    int(p['date']),
+                    p['formatted_date'],
+                    get_ts_now(),
                 ]
             )
     return batch_data

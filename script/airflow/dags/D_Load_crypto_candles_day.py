@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 def task_completed_notification():
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Completed] Airflow Dags: D_Load_candles_day"
+    message = f"{ts_now} [Completed] Airflow Dags: D_Load_crypto_candles_day"
     send_line_message(message)
-    
+
+
 def task_failure_alert(context):
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Failed] Airflow Dags: D_Load_candles_day"
+    message = f"{ts_now} [Failed] Airflow Dags: D_Load_crypto_candles_day"
     send_line_message(message)
-    
 
 
 def _get_candle_data():
@@ -66,9 +66,15 @@ def _process_candle_data(ti):
 def _insert_data_to_cassandra(ti):
     keyspace = "crypto"
     table_name = "candles_day"
-
     candle_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
-    cassandra_operation.insert_data(keyspace, table_name, candle_data)
+
+    query = f"""
+    INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    """
+
+    cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
 def _check_latest_dt():
@@ -78,7 +84,12 @@ def _check_latest_dt():
     target_asset = "BTC_USDT"
     prev_date_ts = datetime.today() - timedelta(days=1)
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
-    count = cassandra_operation.check_latest_dt(keyspace, table_name, prev_date, target_asset).one()[0]
+
+    query = f"""
+    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_asset}'
+    """
+
+    count = cassandra_operation.check_latest_dt(keyspace, query).one()[0]
 
     # If there is no data for prev-day, exit with error.
     if int(count) == 0:
@@ -87,17 +98,17 @@ def _check_latest_dt():
 
 
 with DAG(
-    "D_Load_candles_day",
+    "D_Load_crypto_candles_day",
     description="Load candles day data",
     schedule_interval="0 0 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=task_failure_alert,
-    tags=["D_Load", "candle"],
+    tags=["D_Load", "crypto"],
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    dag_end = PythonOperator(task_id="dag_end",  python_callable=task_completed_notification)
+    dag_end = PythonOperator(task_id="dag_end", python_callable=task_completed_notification)
 
     get_candle_data = PythonOperator(task_id="get_candle_day", python_callable=_get_candle_data, do_xcom_push=True)
 
@@ -107,6 +118,6 @@ with DAG(
 
     check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
 
-    trigger = TriggerDagRunOperator(task_id="trigger_dagrun", trigger_dag_id="D_Load_candles_minute")
+    trigger = TriggerDagRunOperator(task_id="trigger_dagrun", trigger_dag_id="D_Load_crypto_candles_minute")
 
     dag_start >> get_candle_data >> process_candle_data >> insert_data_to_cassandra >> check_latest_dt >> trigger >> dag_end
