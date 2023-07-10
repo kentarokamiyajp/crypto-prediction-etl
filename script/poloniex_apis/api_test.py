@@ -1,5 +1,5 @@
 import sys,os
-sys.path.append('/home/kamiken/polo_sdk')
+sys.path.append('/home/polo_sdk')
 
 import time
 from polosdk import RestClient

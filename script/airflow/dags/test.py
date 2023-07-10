@@ -1,63 +1,46 @@
+import sys
+
+sys.path.append("..")
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from datetime import datetime
-
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.exceptions import AirflowFailException
+from datetime import datetime, timedelta, date
+import time
+from dwh_script.modules.utils import *
+from modules import poloniex_operation, cassandra_operation, utils
 import logging
+
 logger = logging.getLogger(__name__)
 
-from modules import test
 
-def create_file():
-    res = test.create_file()
-    logger.info(res)
-    
-def delete_file():
-    res = test.delete_file()
-    logger.info(res)
-    
-def check_hostname():
-    res = test.check_hostname()
-    logger.info(res)
-    
-def check_whoami():
-    res = test.check_whoami()
-    logger.info(res)
-    
-def check_pwd():
-    res = test.check_pwd()
-    logger.info(res)
+def _get_candle_data():
+    assets = [
+        "BTC_USDT",
+        "ETH_USDT",
+        "BNB_USDT",
+        "XRP_USDT",
+        "ADA_USDT",
+        "DOGE_USDT",
+        "SOL_USDT",
+        "TRX_USDD",
+        "UNI_USDT",
+        "ATOM_USDT",
+        "GMX_USDT",
+        "SHIB_USDT",
+        "MKR_USDT",
+    ]
+    interval = "DAY_1"
 
-with DAG(
-    'test',
-    description='DAG test',
-    schedule_interval=None,
-    start_date=datetime(2023, 1, 1),
-    catchup=False
-) as dag:
-    
-    create_file_task = PythonOperator(
-        task_id='create_file',
-        python_callable=create_file
-    )
-    
-    delete_file_task = PythonOperator(
-        task_id='delete_file',
-        python_callable=delete_file
-    )
-    
-    check_hostname_task = PythonOperator(
-        task_id='check_hostname',
-        python_callable=check_hostname
-    )
-    
-    check_whoami_task = PythonOperator(
-        task_id='check_whoami',
-        python_callable=check_whoami
-    )
-    
-    check_pwd_task = PythonOperator(
-        task_id='check_pwd',
-        python_callable=check_pwd
-    )
-    
-    check_hostname_task >> check_whoami_task >> check_pwd_task >> create_file_task >> delete_file_task
+    period = 60 * 24 * 2  # minute
+    end = time.time()
+    start = end - 60 * period
+    poloniex_operation.test(assets[0], interval, start, end)
+
+
+
+with DAG("test", description="DAG test", schedule_interval=None, start_date=datetime(2023, 1, 1), catchup=False, tags=["test"]) as dag:
+    create_file_task = PythonOperator(task_id="create_file", python_callable=_get_candle_data)
+
+    create_file_task

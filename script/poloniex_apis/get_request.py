@@ -1,5 +1,5 @@
 import sys,os
-sys.path.append('/home/kamiken/polo_sdk')
+sys.path.append('/home/polo_sdk')
 
 import time
 from polosdk import RestClient
@@ -21,10 +21,9 @@ class PoloniexOperator():
     def get_orderbook(self,asset,scale=0.01, limit=100):
         return self.polo.markets().get_orderbook(asset,scale=scale,limit=limit)
     
-    def get_candles(self,asset,interval,period):
-        end = time.time()
-        start = end - 60 * period
-        return self.polo.markets().get_candles(asset, interval, start_time=int(start)*1000, end_time=int(end)*1000)
+    def get_candles(self,asset,interval,start,end):
+        return self.polo.markets().get_candles(asset, interval, start_time=int(start)*1000, end_time=int(end)*1000, limit=500)
+    
 
 def main():
     polo_operator = PoloniexOperator()

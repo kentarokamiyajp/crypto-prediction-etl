@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS candles_daily (
+CREATE TABLE IF NOT EXISTS candles_minute (
     id varchar,
     low float,
     high float,
@@ -15,5 +15,6 @@ CREATE TABLE IF NOT EXISTS candles_daily (
     startTime bigint,
     closeTime bigint,
     dt varchar,
-    PRIMARY KEY ((id,dt),ts)
+    ts_insert_utc timestamp,
+    PRIMARY KEY ((id,dt),startTime,closeTime)
   );
