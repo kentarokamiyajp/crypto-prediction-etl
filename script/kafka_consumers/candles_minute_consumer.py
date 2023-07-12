@@ -108,6 +108,7 @@ def main():
             logger.error("Error:".format(error))
             task_failure_alert()
             c.close()
+            sys.exit(1)
 
 
 if __name__ == "__main__":
