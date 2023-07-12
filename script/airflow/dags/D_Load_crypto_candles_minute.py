@@ -10,12 +10,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def task_completed_notification():
-    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Completed] Airflow Dags: D_Load_crypto_candles_minute"
-    send_line_message(message)
-
-
 def task_failure_alert(context):
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"{ts_now} [Failed] Airflow Dags: D_Load_crypto_candles_minute"
@@ -88,7 +82,7 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    dag_end = PythonOperator(task_id="dag_end", python_callable=task_completed_notification)
+    dag_end = DummyOperator(task_id="dag_end")
 
     get_candle_data = PythonOperator(task_id="get_candle_minite_for_1day", python_callable=_get_candle_data, do_xcom_push=True)
 
