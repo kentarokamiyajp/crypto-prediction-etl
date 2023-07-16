@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS candles_day (
+CREATE TABLE IF NOT EXISTS crypto.candles_day (
     id varchar,
     low float,
     high float,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS candles_day (
     interval varchar,
     startTime bigint,
     closeTime bigint,
-    dt varchar,
+    dt date,
     ts_insert_utc timestamp,
     PRIMARY KEY ((id,dt),startTime,closeTime)
   );

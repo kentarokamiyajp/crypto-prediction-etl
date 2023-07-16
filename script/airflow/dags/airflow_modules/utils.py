@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, date
-
+import pandas_market_calendars as mcal
 
 def get_ts_now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -55,3 +55,10 @@ def process_yahoofinancials_data(data):
                 ]
             )
     return batch_data
+
+def is_makert_open(date,market):
+    calendar = mcal.get_calendar(market)
+    if len(calendar.schedule(start_date=date, end_date=date).index) > 0:
+        return True
+    else:
+        return False

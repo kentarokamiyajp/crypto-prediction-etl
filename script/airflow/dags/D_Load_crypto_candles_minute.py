@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def task_failure_alert(context):
+def _task_failure_alert(context):
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"{ts_now} [Failed] Airflow Dags: D_Load_crypto_candles_minute"
     send_line_message(message)
@@ -80,7 +80,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    on_failure_callback=task_failure_alert,
+    on_failure_callback=_task_failure_alert,
     tags=["D_Load", "crypto"],
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")

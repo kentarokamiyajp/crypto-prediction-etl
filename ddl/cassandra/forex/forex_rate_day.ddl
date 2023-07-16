@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS stock_index_history (
+CREATE TABLE IF NOT EXISTS forex.forex_rate_day (
     id varchar,
     low float,
     high float,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS stock_index_history (
     adjclose float,
     currency varchar,
     date_unix bigint,
-    dt varchar,
+    dt date,
     ts_insert_utc timestamp,
     PRIMARY KEY ((id,dt))
   );

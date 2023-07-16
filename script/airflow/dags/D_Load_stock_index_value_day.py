@@ -14,7 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def task_failure_alert(context):
+def _task_failure_alert(context):
     ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"{ts_now} [Failed] Airflow Dags: D_Load_stock_index_value_day"
     send_line_message(message)
@@ -49,8 +49,8 @@ def _get_stock_index_value():
         "^RUA",
         "^XAX",
     ]
-
-    return yahoofinancials_operation.get_data_from_yahoofinancials(tickers)
+    days = -7 # how many days ago you want to get
+    return yahoofinancials_operation.get_data_from_yahoofinancials(tickers,days)
 
 
 def _process_stock_index_value(ti):
@@ -59,7 +59,7 @@ def _process_stock_index_value(ti):
 
 def _insert_data_to_cassandra(ti):
     keyspace = "stock"
-    table_name = "stock_index_history"
+    table_name = "stock_index_day"
     stock_index_value = ti.xcom_pull(task_ids="process_stock_index_value_for_ingestion")
 
     query = f"""
@@ -73,20 +73,22 @@ def _insert_data_to_cassandra(ti):
 def _check_latest_dt():
     # check if the expected data is inserted.
     keyspace = "stock"
-    table_name = "stock_index_history"
+    table_name = "stock_index_day"
     target_index = "^NDX"
     prev_date_ts = datetime.today() - timedelta(days=1)
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
-    query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_index}'
-    """
-    count = cassandra_operation.check_latest_dt(keyspace, query).one()[0]
+    market="NYSE"
+    if utils.is_makert_open(prev_date,market):
+        query = f"""
+        select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_index}'
+        """
+        count = cassandra_operation.check_latest_dt(keyspace, query).one()[0]
 
-    # If there is no data for prev-day, exit with error.
-    if int(count) == 0:
-        logger.error("There is no data for prev_date ({}, asset={})".format(prev_date, target_index))
-        raise AirflowFailException("Data missing error !!!")
+        # If there is no data for prev-day, exit with error.
+        if int(count) == 0:
+            logger.error("There is no data for prev_date ({}, asset={})".format(prev_date, target_index))
+            raise AirflowFailException("Data missing error !!!")
 
 
 with DAG(
@@ -95,7 +97,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    on_failure_callback=task_failure_alert,
+    on_failure_callback=_task_failure_alert,
     tags=["D_Load", "stock_index"],
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
