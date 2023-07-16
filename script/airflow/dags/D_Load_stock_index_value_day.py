@@ -1,23 +1,17 @@
 import sys
 
-sys.path.append("..")
+sys.path.append("/opt/airflow/git/crypto_prediction_dwh/script/")
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
-from dwh_script.modules.utils import *
-from modules import yahoofinancials_operation, utils, cassandra_operation
+from modules.utils import *
+from airflow_modules import yahoofinancials_operation, utils, cassandra_operation
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-def task_completed_notification():
-    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Completed] Airflow Dags: D_Load_stock_index_value_day"
-    send_line_message(message)
 
 
 def task_failure_alert(context):
@@ -106,7 +100,7 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    dag_end = PythonOperator(task_id="dag_end", python_callable=task_completed_notification)
+    dag_end = DummyOperator(task_id="dag_end")
 
     get_stock_index_value = PythonOperator(task_id="get_stock_index_value", python_callable=_get_stock_index_value, do_xcom_push=True)
 

@@ -1,17 +1,23 @@
-from dwh_script.poloniex_apis import get_request
+import sys
+
+sys.path.append("/opt/airflow/git/crypto_prediction_dwh/script/")
+from poloniex_apis import get_request
 import time
+
 
 def get_candle_data(asset, interval, start, end):
     polo_operator = get_request.PoloniexOperator()
     raw_candle_data = polo_operator.get_candles(asset, interval, start, end)
     return raw_candle_data
 
+
 def test(asset, interval, start, end):
     polo_operator = get_request.PoloniexOperator()
     raw_candle_data = polo_operator.get_candles(asset, interval, start, end)
     print(raw_candle_data)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     assets = [
         "BTC_USDT",
         "ETH_USDT",
