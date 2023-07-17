@@ -15,7 +15,9 @@ def receipt(err, msg):
     if err is not None:
         print("Error: {}".format(err))
     else:
-        message = "Produced message on topic {} with value of {}\n".format(msg.topic(), msg.value().decode("utf-8"))
+        message = "Produced message on topic {} with value of {}\n".format(
+            msg.topic(), msg.value().decode("utf-8")
+        )
         print(message)
 
 

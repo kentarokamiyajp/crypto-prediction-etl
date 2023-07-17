@@ -11,7 +11,7 @@ from modules import utils
 from cassandra_operations import cassandra_operator
 import pytz
 
-jst = pytz.timezone('Asia/Tokyo')
+jst = pytz.timezone("Asia/Tokyo")
 
 ###################
 # Set logging env #
@@ -22,7 +22,10 @@ curr_date = args[1]
 curr_timestamp = args[2]
 logdir = f"/home/kamiken/kafka/log/{curr_date}"
 logging.basicConfig(
-    format="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S", filename=f"{logdir}/candles_minute_consumer_{curr_timestamp}.log", filemode="w"
+    format="%(asctime)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    filename=f"{logdir}/candles_minute_consumer_{curr_timestamp}.log",
+    filemode="w",
 )
 
 logger = logging.getLogger()

@@ -21,7 +21,11 @@ class Operator:
 
     def count_expected_variables(self, query, target_data):
         if len(target_data) != query.count("%s"):
-            print("Expected {} %s in the query, but got {} %s".format(len(target_data), query.count("%s")))
+            print(
+                "Expected {} %s in the query, but got {} %s".format(
+                    len(target_data), query.count("%s")
+                )
+            )
             sys.exit(1)
 
     def insert_single_data(self, query, data):

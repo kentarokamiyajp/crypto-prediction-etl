@@ -1,4 +1,5 @@
-import sys,os
+import sys, os
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 import requests
 import env_settings
@@ -15,6 +16,7 @@ def send_line_message(message):
         params=payload,
     )
 
-if __name__=="__main__":
-    message = 'Notification Test'
+
+if __name__ == "__main__":
+    message = "Notification Test"
     send_line_message(message)

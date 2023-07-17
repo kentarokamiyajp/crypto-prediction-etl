@@ -11,7 +11,7 @@ from poloniex_apis import get_request
 from modules import utils
 import pytz
 
-jst = pytz.timezone('Asia/Tokyo')
+jst = pytz.timezone("Asia/Tokyo")
 
 polo_operator = get_request.PoloniexOperator()
 
@@ -26,7 +26,10 @@ print(curr_date, curr_timestamp)
 
 logdir = f"/home/kamiken/kafka/log/{curr_date}"
 logging.basicConfig(
-    format="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S", filename=f"{logdir}/candles_minute_producer_{curr_timestamp}.log", filemode="w"
+    format="%(asctime)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    filename=f"{logdir}/candles_minute_producer_{curr_timestamp}.log",
+    filemode="w",
 )
 
 logger = logging.getLogger()
@@ -42,7 +45,7 @@ kafka_conf = {"bootstrap.servers": "172.29.0.21:9081,172.29.0.22:9082,172.29.0.2
 admin_client = admin.AdminClient(kafka_conf)
 
 # Define the topic configuration
-target_topic = 'crypto.candles_minute'
+target_topic = "crypto.candles_minute"
 num_partitions = 3
 replication_factor = 2
 
@@ -50,7 +53,7 @@ replication_factor = 2
 new_topic = admin.NewTopic(
     topic=target_topic,
     num_partitions=num_partitions,
-    replication_factor=replication_factor
+    replication_factor=replication_factor,
 )
 
 # Create the topic using the AdminClient
@@ -65,16 +68,22 @@ def _receipt(err, msg):
     if err is not None:
         logger.error("Error: {}".format(err))
     else:
-        message = "Produced message on topic {} with value of {}\n".format(msg.topic(), msg.value().decode("utf-8"))
+        message = "Produced message on topic {} with value of {}\n".format(
+            msg.topic(), msg.value().decode("utf-8")
+        )
 
 
 def _get_dt_from_unix_time(dt_unix_time):
     dt_with_time = datetime.fromtimestamp(int(dt_unix_time) / 1000.0)
-    dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime("%Y-%m-%d")
+    dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime(
+        "%Y-%m-%d"
+    )
     return dt
+
 
 def _unix_time_millisecond_to_second(unix_time):
     return int((unix_time) / 1000.0)
+
 
 def _task_failure_alert(message):
     utils.send_line_message(message)
@@ -113,7 +122,9 @@ def main():
             # get_candles
             for asset in assets:
                 try:
-                    raw_candle_data = polo_operator.get_candles(asset, interval, start, end)
+                    raw_candle_data = polo_operator.get_candles(
+                        asset, interval, start, end
+                    )
                     retry_count = 0
                 except Exception as error:
                     retry_count += 1
@@ -151,13 +162,21 @@ def main():
                 }
 
                 m = json.dumps(candle_data)
-                p.produce(target_topic, value = m.encode("utf-8"), partition=random.randint(0,num_partitions-1), callback=_receipt)
+                p.produce(
+                    target_topic,
+                    value=m.encode("utf-8"),
+                    partition=random.randint(0, num_partitions - 1),
+                    callback=_receipt,
+                )
                 time.sleep(10)
     except Exception as error:
         ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-        message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (unknow error)"
+        message = (
+            f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (unknow error)"
+        )
         _task_failure_alert(message)
         logger.error(f"An exception occurred: {error}")
+
 
 if __name__ == "__main__":
     main()

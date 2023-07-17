@@ -7,7 +7,7 @@ import pytz
 
 base_dir = "/home/kamiken/git/crypto_prediction_dwh/script/kafka_consumers"
 
-jst = pytz.timezone('Asia/Tokyo')
+jst = pytz.timezone("Asia/Tokyo")
 ts_now = datetime.datetime.now(jst)
 curr_date = ts_now.strftime("%Y%m%d")
 curr_timestamp = str(ts_now).replace(" ", "_")

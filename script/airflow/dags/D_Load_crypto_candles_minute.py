@@ -9,14 +9,20 @@ from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
 import time
 from modules.utils import *
-from airflow_modules import poloniex_operation, cassandra_operation, trino_operation, utils
+from airflow_modules import (
+    poloniex_operation,
+    cassandra_operation,
+    trino_operation,
+    utils,
+)
 import logging
 import pytz
 
-jst = pytz.timezone('Asia/Tokyo')
+jst = pytz.timezone("Asia/Tokyo")
 logger = logging.getLogger(__name__)
 
-dag_id = 'D_Load_crypto_candles_minute'
+dag_id = "D_Load_crypto_candles_minute"
+
 
 def _task_failure_alert(context):
     ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
@@ -85,7 +91,9 @@ def _check_latest_dt():
     table_name = "candles_minute"
     target_asset = "BTC_USDT"
     prev_date_ts = datetime.today() - timedelta(days=1)
-    prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
+    prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime(
+        "%Y-%m-%d"
+    )
 
     query = f"""
     select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_asset}'
@@ -95,15 +103,17 @@ def _check_latest_dt():
 
     # If there is no data for prev-day, exit with error.
     if int(count) == 0:
-        logger.error("There is no data for prev-day ({}, asset={})".format(prev_date, target_asset))
+        logger.error(
+            "There is no data for prev-day ({}, asset={})".format(prev_date, target_asset)
+        )
         raise AirflowFailException("Data missing error !!!")
-    
+
 
 def _load_from_cassandra_to_hive(query_file):
-    with open(query_file, 'r') as f:
-        query  = f.read()
+    with open(query_file, "r") as f:
+        query = f.read()
     trino_operation.run(query)
-    
+
 
 with DAG(
     dag_id,
@@ -116,29 +126,44 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_candle_data = PythonOperator(task_id="get_candle_minite_for_1day", python_callable=_get_candle_data, do_xcom_push=True)
+    get_candle_data = PythonOperator(
+        task_id="get_candle_minite_for_1day",
+        python_callable=_get_candle_data,
+        do_xcom_push=True,
+    )
 
-    process_candle_data = PythonOperator(task_id="process_candle_data_for_ingestion", python_callable=_process_candle_data, do_xcom_push=True)
+    process_candle_data = PythonOperator(
+        task_id="process_candle_data_for_ingestion",
+        python_callable=_process_candle_data,
+        do_xcom_push=True,
+    )
 
-    insert_data_to_cassandra = PythonOperator(task_id="insert_candle_data_to_cassandra", python_callable=_insert_data_to_cassandra)
-    
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
-    
-    query_dir = '/opt/airflow/git/crypto_prediction_dwh/script/airflow/dags/query_script/trino'
+    insert_data_to_cassandra = PythonOperator(
+        task_id="insert_candle_data_to_cassandra",
+        python_callable=_insert_data_to_cassandra,
+    )
+
+    check_latest_dt = PythonOperator(
+        task_id="check_latest_dt_existance", python_callable=_check_latest_dt
+    )
+
+    query_dir = (
+        "/opt/airflow/git/crypto_prediction_dwh/script/airflow/dags/query_script/trino"
+    )
     load_from_cassandra_to_hive = PythonOperator(
-        task_id="load_from_cassandra_to_hive", 
-        python_callable=_load_from_cassandra_to_hive, 
-        op_kwargs = {'query_file':f'{query_dir}/D_Load_crypto_candles_minute_001.sql'}
-        )
+        task_id="load_from_cassandra_to_hive",
+        python_callable=_load_from_cassandra_to_hive,
+        op_kwargs={"query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql"},
+    )
 
     dag_end = DummyOperator(task_id="dag_end")
-    
+
     (
-        dag_start 
-        >> get_candle_data 
-        >> process_candle_data 
-        >> insert_data_to_cassandra 
+        dag_start
+        >> get_candle_data
+        >> process_candle_data
+        >> insert_data_to_cassandra
         >> check_latest_dt
-        >> load_from_cassandra_to_hive 
-        >> dag_end   
+        >> load_from_cassandra_to_hive
+        >> dag_end
     )

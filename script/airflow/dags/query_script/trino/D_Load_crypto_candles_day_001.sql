@@ -1,49 +1,55 @@
-insert into hive.crypto_raw.candles_day
-(
+INSERT INTO
+    hive.crypto_raw.candles_day (
+        id,
+        low,
+        high,
+        open,
+        CLOSE,
+        amount,
+        quantity,
+        buyTakerAmount,
+        buyTakerQuantity,
+        tradeCount,
+        ts,
+        weightedAverage,
+        interval_type,
+        startTime,
+        closeTime,
+        dt,
+        ts_insert_utc,
+        YEAR,
+        MONTH,
+        DAY,
+        HOUR
+    )
+SELECT
     id,
     low,
     high,
     open,
-    close,
-    amount,
-    quantity,
-    buyTakerAmount,
-    buyTakerQuantity,
-    tradeCount,
-    ts,
-    weightedAverage,
-    interval_type,
-    startTime,
-    closeTime,
-    dt,
-    ts_insert_utc,
-    year,
-    month,
-    day,
-    hour
-)
-select
-    id,
-    low,
-    high,
-    open,
-    close,
-    amount,
-    quantity,
-    buyTakerAmount,
-    buyTakerQuantity,
-    tradeCount,
-    ts,
-    weightedAverage,
-    interval,
-    startTime,
-    closeTime,
-    dt,
-    ts_insert_utc,
-    year(from_unixtime(closeTime)),
-    month(from_unixtime(closeTime)),
-    day(from_unixtime(closeTime)),
-    hour(from_unixtime(closeTime))
-from cassandra.crypto.candles_day
-where 
-    dt > (select COALESCE(max(dt), cast('1111-01-01' as date)) from hive.crypto_raw.candles_day)
+CLOSE,
+amount,
+quantity,
+buyTakerAmount,
+buyTakerQuantity,
+tradeCount,
+ts,
+weightedAverage,
+INTERVAL,
+startTime,
+closeTime,
+dt,
+ts_insert_utc,
+YEAR (from_unixtime (closeTime)),
+MONTH (from_unixtime (closeTime)),
+DAY (from_unixtime (closeTime)),
+HOUR (from_unixtime (closeTime))
+FROM
+    cassandra.crypto.candles_day
+WHERE
+    dt > (
+        SELECT
+            COALESCE(MAX(dt), CAST('1111-01-01' AS date))
+        FROM
+            hive.crypto_raw.candles_day
+    )
