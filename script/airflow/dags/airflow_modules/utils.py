@@ -1,10 +1,16 @@
 from datetime import datetime, timezone, date
+import pandas_market_calendars as mcal
+import pytz
 
+def _unix_time_millisecond_to_second(unix_time):
+    return int((unix_time) / 1000.0)
 
-def get_ts_now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+def get_ts_now(_timezone):
+    tz = pytz.timezone(_timezone)    
+    return datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
 
 def process_candle_data_from_poloniex(data):
+    timezone = 'UTC'
     batch_data = []
     for asset_name, asset_data in data.items():
         for d in asset_data:
@@ -22,22 +28,24 @@ def process_candle_data_from_poloniex(data):
                     float(d[6]),
                     float(d[7]),
                     int(d[8]),
-                    int(d[9]),
+                    _unix_time_millisecond_to_second(d[9]),
                     float(d[10]),
                     d[11],
-                    int(d[12]),
-                    int(d[13]),
+                    _unix_time_millisecond_to_second(d[12]),
+                    _unix_time_millisecond_to_second(d[13]),
                     dt,
-                    get_ts_now(),
+                    get_ts_now(timezone),
                 ]
             )
     return batch_data
 
 def process_yahoofinancials_data(data):
+    timezone = 'UTC'
     batch_data = []
     for symbol_name, data in data.items():
         currency = data['currency']
         prices = data['prices']
+        tz_gmtoffset = data['timeZone']['gmtOffset']
         for p in prices:
             batch_data.append(
                 [
@@ -51,7 +59,21 @@ def process_yahoofinancials_data(data):
                     currency,
                     int(p['date']),
                     p['formatted_date'],
-                    get_ts_now(),
+                    int(tz_gmtoffset),
+                    get_ts_now(timezone),
                 ]
             )
     return batch_data
+
+def is_makert_open(date,market):
+    calendar = mcal.get_calendar(market)
+    if len(calendar.schedule(start_date=date, end_date=date).index) > 0:
+        return True
+    else:
+        return False
+
+
+if __name__=="__main__":
+    market = "NYSE"
+    date = '2023-07-16'
+    print(is_makert_open(date, market))

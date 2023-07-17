@@ -9,15 +9,18 @@ from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
 import time
 from modules.utils import *
-from airflow_modules import poloniex_operation, cassandra_operation, utils
+from airflow_modules import poloniex_operation, cassandra_operation, trino_operation, utils
 import logging
+import pytz
 
+jst = pytz.timezone("Asia/Tokyo")
 logger = logging.getLogger(__name__)
 
+dag_id = 'D_Load_crypto_candles_day'
 
-def task_failure_alert(context):
-    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Failed] Airflow Dags: D_Load_crypto_candles_day"
+def _task_failure_alert(context):
+    ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+    message = f"{ts_now} [Failed] Airflow Dags: {dag_id}"
     send_line_message(message)
 
 
@@ -40,7 +43,8 @@ def _get_candle_data():
     interval = "DAY_1"
 
     res = {}
-    period = 60 * 24 * 2  # minute
+    days = 7  # how many days ago you want to get
+    period = 60 * 24 * days  # minute
     end = time.time()
     start = end - 60 * period
     for asset in assets:
@@ -91,18 +95,22 @@ def _check_latest_dt():
         raise AirflowFailException("Data missing error !!!")
 
 
+def _load_from_cassandra_to_hive(query_file):
+    with open(query_file, 'r') as f:
+        query  = f.read()
+    trino_operation.run(query)
+    
+
 with DAG(
-    "D_Load_crypto_candles_day",
+    dag_id,
     description="Load candles day data",
-    schedule_interval="0 0 * * *",
+    schedule_interval="0 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    on_failure_callback=task_failure_alert,
+    on_failure_callback=_task_failure_alert,
     tags=["D_Load", "crypto"],
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
-
-    dag_end = DummyOperator(task_id="dag_end")
 
     get_candle_data = PythonOperator(task_id="get_candle_day", python_callable=_get_candle_data, do_xcom_push=True)
 
@@ -111,7 +119,27 @@ with DAG(
     insert_data_to_cassandra = PythonOperator(task_id="insert_candle_data_to_cassandra", python_callable=_insert_data_to_cassandra)
 
     check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
+    
+    query_dir = '/opt/airflow/git/crypto_prediction_dwh/script/airflow/dags/query_script/trino'
+    load_from_cassandra_to_hive = PythonOperator(
+        task_id="load_from_cassandra_to_hive", 
+        python_callable=_load_from_cassandra_to_hive, 
+        op_kwargs = {'query_file':f'{query_dir}/D_Load_crypto_candles_day_001.sql'}
+        )
+    
+    trigger = TriggerDagRunOperator(
+        task_id="trigger_dagrun", trigger_dag_id="D_Load_crypto_candles_minute"
+    )
+    
+    dag_end = DummyOperator(task_id="dag_end")
 
-    trigger = TriggerDagRunOperator(task_id="trigger_dagrun", trigger_dag_id="D_Load_crypto_candles_minute")
-
-    dag_start >> get_candle_data >> process_candle_data >> insert_data_to_cassandra >> check_latest_dt >> trigger >> dag_end
+    (
+        dag_start
+        >> get_candle_data
+        >> process_candle_data
+        >> insert_data_to_cassandra
+        >> check_latest_dt
+        >> load_from_cassandra_to_hive
+        >> trigger
+        >> dag_end
+    )
