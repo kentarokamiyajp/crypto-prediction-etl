@@ -7,8 +7,9 @@ CREATE TABLE IF NOT EXISTS forex.forex_rate_day (
     volume float,
     adjclose float,
     currency varchar,
-    date_unix bigint,
+    dt_unix bigint,
     dt date,
+    tz_gmtoffset int,
     ts_insert_utc timestamp,
     PRIMARY KEY ((id,dt))
   );

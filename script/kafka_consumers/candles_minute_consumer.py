@@ -9,6 +9,9 @@ import logging
 from pprint import pprint
 from modules import utils
 from cassandra_operations import cassandra_operator
+import pytz
+
+jst = pytz.timezone('Asia/Tokyo')
 
 ###################
 # Set logging env #
@@ -34,7 +37,7 @@ def _error_cb(error):
 
 
 def _task_failure_alert():
-    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
     message = f"{ts_now} [Failed] Kafka consumer: candles_minute_consumer.py"
     utils.send_line_message(message)
 

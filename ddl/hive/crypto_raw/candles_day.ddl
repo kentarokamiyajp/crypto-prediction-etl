@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS crypto_raw.candles_minute (
+CREATE TABLE IF NOT EXISTS crypto_raw.candles_day (
     id string COMMENT 'id of the crypto currency',
     low float COMMENT 'lowest price over the interval',
     high float COMMENT 'highest price over the interval',
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS crypto_raw.candles_minute (
     dt date COMMENT 'date market closed',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
 )
-COMMENT 'crypto candles data for each minute'
+COMMENT 'crypto candles data for each day'
 PARTITIONED BY(year smallint COMMENT 'year at the market opening', 
     month smallint COMMENT 'month at the market opening', 
     day smallint COMMENT 'day at the market opening', 

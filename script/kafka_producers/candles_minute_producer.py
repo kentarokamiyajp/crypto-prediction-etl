@@ -9,6 +9,9 @@ import logging
 import random
 from poloniex_apis import get_request
 from modules import utils
+import pytz
+
+jst = pytz.timezone('Asia/Tokyo')
 
 polo_operator = get_request.PoloniexOperator()
 
@@ -65,15 +68,15 @@ def _receipt(err, msg):
         message = "Produced message on topic {} with value of {}\n".format(msg.topic(), msg.value().decode("utf-8"))
 
 
-def _get_dt(dt_unix_time):
+def _get_dt_from_unix_time(dt_unix_time):
     dt_with_time = datetime.fromtimestamp(int(dt_unix_time) / 1000.0)
     dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime("%Y-%m-%d")
     return dt
 
+def _unix_time_millisecond_to_second(unix_time):
+    return int((unix_time) / 1000.0)
 
-def _task_failure_alert():
-    ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py"
+def _task_failure_alert(message):
     utils.send_line_message(message)
 
 
@@ -105,48 +108,56 @@ def main():
 
     retry_count = 0
     max_retry_count = 5
-    while True:
-        # get_candles
-        for asset in assets:
-            try:
-                raw_candle_data = polo_operator.get_candles(asset, interval, start, end)
-                retry_count = 0
-            except:
-                retry_count += 1
-                logger.warning("API ERROR: Could not get candle data")
-                logger.warning(f"Retry Requst: {retry_count}")
-                if retry_count == max_retry_count:
-                    _task_failure_alert()
-                    sys.exit(1)
+    try:
+        while True:
+            # get_candles
+            for asset in assets:
+                try:
+                    raw_candle_data = polo_operator.get_candles(asset, interval, start, end)
+                    retry_count = 0
+                except Exception as error:
+                    retry_count += 1
+                    logger.warning(f"API ERROR: Could not get candle data ({error})")
+                    logger.warning(f"Retry Requst: {retry_count}")
+                    if retry_count == max_retry_count:
+                        ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+                        message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (exceeeded max retry count)"
+                        _task_failure_alert(message)
+                        sys.exit(1)
+                    time.sleep(10)
+
+                candle_data = {
+                    "data": [
+                        {
+                            "id": asset,
+                            "low": data[0],
+                            "high": data[1],
+                            "open": data[2],
+                            "close": data[3],
+                            "amount": data[4],
+                            "quantity": data[5],
+                            "buyTakerAmount": data[6],
+                            "buyTakerQuantity": data[7],
+                            "tradeCount": data[8],
+                            "ts": _unix_time_millisecond_to_second(data[9]),
+                            "weightedAverage": data[10],
+                            "interval": data[11],
+                            "startTime": _unix_time_millisecond_to_second(data[12]),
+                            "closeTime": _unix_time_millisecond_to_second(data[13]),
+                            "dt": _get_dt_from_unix_time(data[12]),
+                        }
+                        for data in raw_candle_data
+                    ]
+                }
+
+                m = json.dumps(candle_data)
+                p.produce(target_topic, value = m.encode("utf-8"), partition=random.randint(0,num_partitions-1), callback=_receipt)
                 time.sleep(10)
-
-            candle_data = {
-                "data": [
-                    {
-                        "id": asset,
-                        "low": data[0],
-                        "high": data[1],
-                        "open": data[2],
-                        "close": data[3],
-                        "amount": data[4],
-                        "quantity": data[5],
-                        "buyTakerAmount": data[6],
-                        "buyTakerQuantity": data[7],
-                        "tradeCount": data[8],
-                        "ts": data[9],
-                        "weightedAverage": data[10],
-                        "interval": data[11],
-                        "startTime": data[12],
-                        "closeTime": data[13],
-                        "dt": _get_dt(data[12]),
-                    }
-                    for data in raw_candle_data
-                ]
-            }
-
-            m = json.dumps(candle_data)
-            p.produce(target_topic, value = m.encode("utf-8"), partition=random.randint(0,num_partitions-1), callback=_receipt)
-            time.sleep(10)
+    except Exception as error:
+        ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+        message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (unknow error)"
+        _task_failure_alert(message)
+        logger.error(f"An exception occurred: {error}")
 
 if __name__ == "__main__":
     main()
