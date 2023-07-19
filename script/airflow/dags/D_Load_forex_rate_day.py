@@ -88,6 +88,8 @@ def _check_latest_dt():
         raise AirflowFailException("Data missing error !!!")
 
 
+args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+
 with DAG(
     dag_id,
     description="Load forex rate data",
@@ -96,6 +98,7 @@ with DAG(
     catchup=False,
     on_failure_callback=_task_failure_alert,
     tags=["D_Load", "forex_rate"],
+    default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 

@@ -115,6 +115,8 @@ def _load_from_cassandra_to_hive(query_file):
     trino_operation.run(query)
 
 
+args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+
 with DAG(
     dag_id,
     description="Load candles minute data daily",
@@ -123,6 +125,7 @@ with DAG(
     catchup=False,
     on_failure_callback=_task_failure_alert,
     tags=["D_Load", "crypto"],
+    default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 

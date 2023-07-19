@@ -20,13 +20,13 @@ with DAG(
         ssh_conn_id="ssh_python_docker",
         command="ls -al",
     )
-    
+
     tdch_to_landing = SSHOperator(
         task_id="tdch_to_landing",
         ssh_conn_id="ssh_python_docker",
         command="ls -al",
     )
-    
+
     update_meta_in_hive = SSHOperator(
         task_id="update_meta_in_hive",
         ssh_conn_id="ssh_python_docker",
@@ -48,4 +48,11 @@ with DAG(
 
     dag_end = DummyOperator(task_id="dag_end", trigger_rule="all_done")
 
-    insert_diff_in_hive >> tdch_to_landing >> update_meta_in_hive >> daily_end_check >> copy_from_landing_to_raw >> dag_end
+    (
+        insert_diff_in_hive
+        >> tdch_to_landing
+        >> update_meta_in_hive
+        >> daily_end_check
+        >> copy_from_landing_to_raw
+        >> dag_end
+    )
