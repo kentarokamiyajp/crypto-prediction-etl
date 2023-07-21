@@ -1,7 +1,11 @@
-import sys
+import sys, os
+
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+
 from datetime import datetime, timezone, date
 import pandas_market_calendars as mcal
 import pytz
+import env_variables
 
 
 def _unix_time_millisecond_to_second(unix_time):
@@ -46,7 +50,7 @@ def process_candle_data_from_poloniex(data):
                 )
             except Exception as error:
                 print("Error:".format(error))
-                print("asset_data ==>> \n",asset_data)
+                print("asset_data ==>> \n", asset_data)
                 sys.exit(1)
     return batch_data
 
@@ -78,7 +82,7 @@ def process_yahoofinancials_data(data):
                 )
             except Exception as error:
                 print("Error:".format(error))
-                print("data ==>> \n",data)
+                print("data ==>> \n", data)
                 sys.exit(1)
     return batch_data
 

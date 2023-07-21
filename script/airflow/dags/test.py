@@ -1,6 +1,4 @@
 import sys
-
-sys.path.append("/opt/airflow/git/crypto_prediction_dwh/script/")
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
@@ -9,8 +7,6 @@ from airflow.exceptions import AirflowFailException
 from airflow.utils.task_group import TaskGroup
 from datetime import datetime, timedelta, date
 import time
-from modules.utils import *
-from airflow_modules import poloniex_operation, cassandra_operation, utils
 import logging
 
 logger = logging.getLogger(__name__)

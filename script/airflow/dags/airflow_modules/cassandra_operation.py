@@ -1,6 +1,10 @@
-import sys
+import sys, os
 
-sys.path.append("/opt/airflow/git/crypto_prediction_dwh/script/")
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+
+import env_variables
+
+sys.path.append(env_variables.DWH_SCRIPT)
 from cassandra_operations import cassandra_operator
 
 

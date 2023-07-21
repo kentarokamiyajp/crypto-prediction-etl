@@ -8,7 +8,7 @@ from datetime import datetime, date
 import logging
 import random
 from poloniex_apis import get_request
-from modules import utils
+from modules import env_variables, utils
 import pytz
 
 jst = pytz.timezone("Asia/Tokyo")
@@ -24,7 +24,7 @@ curr_date = args[1]
 curr_timestamp = args[2]
 print(curr_date, curr_timestamp)
 
-logdir = f"/home/kamiken/kafka/log/{curr_date}"
+logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
 logging.basicConfig(
     format="%(asctime)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -39,7 +39,7 @@ logger.setLevel(20)
 ###################
 # Set Kafka config #
 ###################
-kafka_conf = {"bootstrap.servers": "172.29.0.21:9081,172.29.0.22:9082,172.29.0.23:9083"}
+kafka_conf = {"bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS}
 
 # Create an instance of the AdminClient
 admin_client = admin.AdminClient(kafka_conf)
@@ -135,7 +135,7 @@ def main():
                         message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (exceeeded max retry count)"
                         _task_failure_alert(message)
                         sys.exit(1)
-                    time.sleep(10)
+                    time.sleep(600)
 
                 candle_data = {
                     "data": [

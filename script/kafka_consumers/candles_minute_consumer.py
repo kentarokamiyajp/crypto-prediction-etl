@@ -3,11 +3,9 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from confluent_kafka import Consumer
 import json
-import time
 from datetime import datetime, timezone
 import logging
-from pprint import pprint
-from modules import utils
+from modules import env_variables, utils
 from cassandra_operations import cassandra_operator
 import pytz
 
@@ -20,7 +18,7 @@ jst = pytz.timezone("Asia/Tokyo")
 args = sys.argv
 curr_date = args[1]
 curr_timestamp = args[2]
-logdir = f"/home/kamiken/kafka/log/{curr_date}"
+logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
 logging.basicConfig(
     format="%(asctime)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -46,7 +44,7 @@ def _task_failure_alert():
 
 
 kafka_conf = {
-    "bootstrap.servers": "172.29.0.21:9081,172.29.0.22:9082,172.29.0.23:9083",
+    "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
     "group.id": "candles-minute-consumer",
     "auto.offset.reset": "latest",
     "error_cb": _error_cb,

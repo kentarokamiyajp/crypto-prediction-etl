@@ -1,6 +1,11 @@
+import sys, os
+
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+
 import datetime
 from yahoofinancials import YahooFinancials
 import pytz
+import env_variables
 
 
 def get_data_from_yahoofinancials(symbols, days, interval):

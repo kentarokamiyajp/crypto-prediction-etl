@@ -1,35 +1,33 @@
 import sys
-
-sys.path.append("/opt/airflow/git/crypto_prediction_dwh/script/")
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
-from modules.utils import *
-from airflow_modules import (
-    yahoofinancials_operation,
-    cassandra_operation,
-    trino_operation,
-    utils,
-)
 import logging
-import pytz
 
-jst = pytz.timezone("Asia/Tokyo")
 logger = logging.getLogger(__name__)
 
 dag_id = "D_Load_stock_index_value_day"
 
 
 def _task_failure_alert(context):
+    from airflow_modules import env_variables
+
+    sys.path.append(env_variables.DWH_SCRIPT)
+    import pytz
+    from modules.utils import send_line_message
+
+    jst = pytz.timezone("Asia/Tokyo")
     ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
     message = f"{ts_now} [Failed] Airflow Dags: {dag_id}"
     send_line_message(message)
 
 
 def _get_stock_index_value():
+    from airflow_modules import yahoofinancials_operation
+
     tickers = [
         "^NDX",
         "^DJI",
@@ -66,11 +64,15 @@ def _get_stock_index_value():
 
 
 def _process_stock_index_value(ti):
+    from airflow_modules import utils
+
     stock_index_value = ti.xcom_pull(task_ids="get_stock_index_value")
     return utils.process_yahoofinancials_data(stock_index_value)
 
 
 def _insert_data_to_cassandra(ti):
+    from airflow_modules import cassandra_operation
+
     keyspace = "stock"
     table_name = "stock_index_day"
     stock_index_value = ti.xcom_pull(task_ids="process_stock_index_value_for_ingestion")
@@ -84,6 +86,9 @@ def _insert_data_to_cassandra(ti):
 
 
 def _check_latest_dt():
+    import pytz
+    from airflow_modules import cassandra_operation, utils
+
     # check if the expected data is inserted.
     keyspace = "stock"
     table_name = "stock_index_day"
@@ -111,6 +116,8 @@ def _check_latest_dt():
 
 
 def _load_from_cassandra_to_hive(query_file):
+    from airflow_modules import trino_operation
+
     with open(query_file, "r") as f:
         query = f.read()
     trino_operation.run(query)
@@ -151,9 +158,9 @@ with DAG(
         task_id="check_latest_dt_existance", python_callable=_check_latest_dt
     )
 
-    query_dir = (
-        "/opt/airflow/git/crypto_prediction_dwh/script/airflow/dags/query_script/trino"
-    )
+    from airflow_modules import env_variables
+
+    query_dir = "{}/trino".format(env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,

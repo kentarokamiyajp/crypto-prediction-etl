@@ -1,13 +1,14 @@
 from trino.dbapi import connect
 from pprint import pprint
+from modules import env_variables
 
 
 class Operator:
     def __init__(self, user, catalog=None, schema=None):
         self.conn = connect(
-            host="192.168.10.14",
-            port=8881,
-            user=user,
+            host=env_variables.TRINO_HOST,
+            port=int(env_variables.TRINO_PORT),
+            user=env_variables.TRINO_USER,
             catalog=catalog,
             schema=schema,
         )
@@ -19,7 +20,7 @@ class Operator:
 
 
 if __name__ == "__main__":
-    user = "trino"
+    user = env_variables.TRINO_USER
     catalog = "hive"
     cursor = Operator(
         user,

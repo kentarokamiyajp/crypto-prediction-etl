@@ -1,8 +1,8 @@
 import sys, os
+from modules import env_variables
 
-sys.path.append("/home/polo_sdk")
+sys.path.append(env_variables.POLONIEX_HOME)
 
-import time
 from polosdk import RestClient
 from pprint import pprint
 

@@ -4,15 +4,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import datetime
 import subprocess
 import pytz
+from modules import env_variables
 
-base_dir = "/home/kamiken/git/crypto_prediction_dwh/script/kafka_consumers"
+base_dir = env_variables.KAFKA_CONSUMER_HOME
 
 jst = pytz.timezone("Asia/Tokyo")
 ts_now = datetime.datetime.now(jst)
 curr_date = ts_now.strftime("%Y%m%d")
 curr_timestamp = str(ts_now).replace(" ", "_")
 
-logdir = f"/home/kamiken/kafka/log/{curr_date}"
+logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
 isExist = os.path.exists(logdir)
 if not isExist:
     os.makedirs(logdir)

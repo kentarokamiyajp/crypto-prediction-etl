@@ -2,13 +2,21 @@ import sys
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.query import SimpleStatement, BatchStatement
+from modules import env_variables
 
 
 class Operator:
     def __init__(self, keyspace):
-        auth_provider = PlainTextAuthProvider(username="kamiken", password="kamiken")
+        auth_provider = PlainTextAuthProvider(
+            username=env_variables.CASSANDRA_USERNAME,
+            password=env_variables.CASSANDRA_PASSWORD,
+        )
 
-        self.cluster = Cluster(["172.29.0.2"], port=9042, auth_provider=auth_provider)
+        self.cluster = Cluster(
+            [env_variables.CASSANDRA_HOST],
+            port=int(env_variables.CASSANDRA_PORT),
+            auth_provider=auth_provider,
+        )
         self.session = self.cluster.connect(keyspace)
 
     def __del__(self):

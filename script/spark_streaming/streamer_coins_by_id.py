@@ -4,6 +4,7 @@ from pyspark.sql.types import *
 from pyspark.sql.streaming import DataStreamWriter
 from pprint import pprint
 from datetime import datetime
+from modules import env_variables
 
 """
 Spark Streaming: Kafka Topic -> Cassandra
@@ -12,10 +13,10 @@ MAX_MEMORY = "1g"
 
 spark = (
     SparkSession.builder.appName("SparkCassandraApp")
-    .config("spark.cassandra.connection.host", "172.29.0.9")
-    .config("spark.cassandra.connection.port", "9042")
-    .config("spark.cassandra.auth.username", "kamiken")
-    .config("spark.cassandra.auth.password", "kamiken")
+    .config("spark.cassandra.connection.host", env_variables.CASSANDRA_HOST)
+    .config("spark.cassandra.connection.port", env_variables.CASSANDRA_PORT)
+    .config("spark.cassandra.auth.username", env_variables.CASSANDRA_USERNAME)
+    .config("spark.cassandra.auth.password", env_variables.CASSANDRA_PASSWORD)
     .config("spark.streaming.stopGracefullyOnShutdown", "true")
     .config(
         "spark.jars.packages",
@@ -28,7 +29,7 @@ spark = (
 )
 spark.sparkContext.setLogLevel("ERROR")
 
-KAFKA_BOOTSTRAP_SERVER = "172.29.0.13:9092"
+KAFKA_BOOTSTRAP_SERVER = env_variables.KAFKA_BOOTSTRAP_SERVERS
 
 # Load messages from Kafka Topic
 KAFKA_TOPIC_coins_by_id = "crypto.coins_by_id"

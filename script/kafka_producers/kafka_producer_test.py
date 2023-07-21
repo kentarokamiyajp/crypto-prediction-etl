@@ -1,12 +1,10 @@
 from confluent_kafka import Producer
 import json
 import time
-import logging
-import random
-import requests
+from modules import env_variables
 
 ####################
-p = Producer({"bootstrap.servers": "172.29.0.9:9092"})
+p = Producer({"bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS})
 print("Kafka Producer has been initiated...")
 
 

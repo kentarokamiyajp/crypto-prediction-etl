@@ -1,9 +1,10 @@
 from confluent_kafka import Consumer
+from modules import env_variables
 
 ################
 c = Consumer(
     {
-        "bootstrap.servers": "192.168.240.5:9092",
+        "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
         "group.id": "python-consumer",
         "auto.offset.reset": "earliest",
     }
