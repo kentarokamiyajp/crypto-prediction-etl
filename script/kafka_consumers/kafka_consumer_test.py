@@ -1,7 +1,14 @@
 from confluent_kafka import Consumer
+from modules import env_variables
 
 ################
-c = Consumer({"bootstrap.servers": "192.168.240.5:9092", "group.id": "python-consumer", "auto.offset.reset": "earliest"})
+c = Consumer(
+    {
+        "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
+        "group.id": "python-consumer",
+        "auto.offset.reset": "earliest",
+    }
+)
 print("Kafka Consumer has been initiated...")
 
 print("Available topics to consume: ", c.list_topics().topics)

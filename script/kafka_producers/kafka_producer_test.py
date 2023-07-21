@@ -1,12 +1,10 @@
 from confluent_kafka import Producer
 import json
 import time
-import logging
-import random
-import requests
+from modules import env_variables
 
 ####################
-p = Producer({"bootstrap.servers": "172.29.0.9:9092"})
+p = Producer({"bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS})
 print("Kafka Producer has been initiated...")
 
 
@@ -15,7 +13,9 @@ def receipt(err, msg):
     if err is not None:
         print("Error: {}".format(err))
     else:
-        message = "Produced message on topic {} with value of {}\n".format(msg.topic(), msg.value().decode("utf-8"))
+        message = "Produced message on topic {} with value of {}\n".format(
+            msg.topic(), msg.value().decode("utf-8")
+        )
         print(message)
 
 

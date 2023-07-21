@@ -1,6 +1,10 @@
-import sys
+import sys, os
 
-sys.path.append("/opt/airflow/git/crypto_prediction_dwh/script/")
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+
+import env_variables
+
+sys.path.append(env_variables.DWH_SCRIPT)
 from cassandra_operations import cassandra_operator
 
 
@@ -10,7 +14,9 @@ def insert_data(keyspace, candle_data, query):
     batch_size = 100
     curr_index = 0
     while curr_index < len(candle_data):
-        cass_ope.insert_batch_data(query, candle_data[curr_index : curr_index + batch_size])
+        cass_ope.insert_batch_data(
+            query, candle_data[curr_index : curr_index + batch_size]
+        )
         curr_index += batch_size
 
     curr_index -= batch_size

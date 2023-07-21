@@ -1,12 +1,13 @@
-import sys,os
+import sys, os
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 import requests
-import env_settings
+import env_variables
 
 
 def send_line_message(message):
-    url = "https://notify-api.line.me/api/notify"
-    access_token = env_settings.LINE_ACCESS_TOKEN
+    url = env_variables.LINE_NOTIFY_URL
+    access_token = env_variables.LINE_ACCESS_TOKEN
     headers = {"Authorization": "Bearer " + access_token}
     payload = {"message": message}
     requests.post(
@@ -15,6 +16,7 @@ def send_line_message(message):
         params=payload,
     )
 
-if __name__=="__main__":
-    message = 'Notification Test'
+
+if __name__ == "__main__":
+    message = "Notification Test"
     send_line_message(message)
