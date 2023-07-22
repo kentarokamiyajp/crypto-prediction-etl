@@ -110,11 +110,6 @@ def main():
         "MKR_USDT",
     ]
 
-    interval = "MINUTE_1"
-    period = 5  # minute
-    end = time.time()
-    start = end - 60 * period
-
     retry_count = 0
     max_retry_count = 5
     try:
@@ -122,6 +117,13 @@ def main():
             # get_candles
             for asset in assets:
                 try:
+                    # set parameters
+                    interval = "MINUTE_1"
+                    period = 5  # minute
+                    end = time.time()
+                    start = end - 60 * period
+                    
+                    # get data
                     raw_candle_data = polo_operator.get_candles(
                         asset, interval, start, end
                     )
@@ -168,7 +170,7 @@ def main():
                     partition=random.randint(0, num_partitions - 1),
                     callback=_receipt,
                 )
-                time.sleep(10)
+                time.sleep(5)
     except Exception as error:
         ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
         message = (
