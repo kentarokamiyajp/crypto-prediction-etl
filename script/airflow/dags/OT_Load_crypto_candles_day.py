@@ -2,13 +2,12 @@ import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.exceptions import AirflowFailException
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
 
-dag_id = "D_Load_crypto_candles_minute"
+dag_id = "OT_Load_crypto_candles_day"
 
 
 def _task_failure_alert(context):
@@ -25,7 +24,7 @@ def _task_failure_alert(context):
     send_line_message(message)
 
 
-def _get_candle_data():
+def _get_crypto_candle_day_past_data():
     import time
     from airflow_modules import poloniex_operation
 
@@ -45,30 +44,53 @@ def _get_candle_data():
         "MKR_USDT",
     ]
 
-    interval = "MINUTE_1"
+    interval = "DAY_1"
+
+    target_days = 1000  # how many days ago you want to get.
+    seconds_of_one_day = 60 * 60 * 24  # seconds of one day
+    period = seconds_of_one_day * target_days
+    to_time = time.time()  # to this time to get the past data
+    from_time = to_time - period  # from this time to get the past data
 
     res = {}
-    initial_end = time.time()
-    for asset in assets:
-        for i in reversed(range(1, 5)):
-            start = initial_end - (60 * 500 * i)
-            end = initial_end - (60 * 500 * (i - 1))
+    window_size = seconds_of_one_day * 30  # Get data of <window_size> days for each time.
+    curr_from_time = from_time
+    curr_to_time = curr_from_time + window_size
+    while True:
+        for asset in assets:
+            try:
+                logger.info(
+                    "{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time)
+                )
+                data = poloniex_operation.get_candle_data(
+                    asset, interval, curr_from_time, curr_to_time
+                )
+                if data != None:
+                    if asset in res:
+                        res[asset].extend(data)
+                    else:
+                        res[asset] = data
+            except Exception as error:
+                logger.error("Error: {}".format(error))
+                logger.warn(
+                    "Probably, {} does not exists at the time because it's new currency".format(
+                        asset
+                    )
+                )
+            time.sleep(5)
+        curr_from_time = curr_to_time
+        curr_to_time = curr_from_time + window_size
 
-            logger.info("{}: Load from {} to {}".format(asset, start, end))
+        if curr_from_time > to_time:
+            break
 
-            candle_data = poloniex_operation.get_candle_data(asset, interval, start, end)
-            if asset in res:
-                res[asset] += candle_data
-            else:
-                res[asset] = candle_data
-            time.sleep(10)
     return res
 
 
 def _process_candle_data(ti):
     from airflow_modules import utils
 
-    candle_data = ti.xcom_pull(task_ids="get_candle_minite_for_1day")
+    candle_data = ti.xcom_pull(task_ids="get_crypto_candle_day_past_data")
     res = utils.process_candle_data_from_poloniex(candle_data)
 
     return res
@@ -78,7 +100,7 @@ def _insert_data_to_cassandra(ti):
     from airflow_modules import cassandra_operation
 
     keyspace = "crypto"
-    table_name = "candles_minute"
+    table_name = "candles_day"
     candle_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
 
     query = f"""
@@ -90,32 +112,6 @@ def _insert_data_to_cassandra(ti):
     cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
-def _check_latest_dt():
-    from airflow_modules import cassandra_operation
-
-    # check if the expected data is inserted.
-    keyspace = "crypto"
-    table_name = "candles_minute"
-    target_asset = "BTC_USDT"
-    prev_date_ts = datetime.today() - timedelta(days=1)
-    prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime(
-        "%Y-%m-%d"
-    )
-
-    query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_asset}'
-    """
-
-    count = cassandra_operation.check_latest_dt(keyspace, query).one()[0]
-
-    # If there is no data for prev-day, exit with error.
-    if int(count) == 0:
-        logger.error(
-            "There is no data for prev-day ({}, asset={})".format(prev_date, target_asset)
-        )
-        raise AirflowFailException("Data missing error !!!")
-
-
 def _load_from_cassandra_to_hive(query_file):
     from airflow_modules import trino_operation
 
@@ -124,23 +120,23 @@ def _load_from_cassandra_to_hive(query_file):
     trino_operation.run(query)
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=5)}
 
 with DAG(
     dag_id,
-    description="Load candles minute data daily",
+    description="One time operation to load the past data for crypto candles day",
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
-    tags=["D_Load", "crypto"],
+    tags=["OT_Load", "crypto"],
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_candle_data = PythonOperator(
-        task_id="get_candle_minite_for_1day",
-        python_callable=_get_candle_data,
+    get_crypto_candle_day_past_data = PythonOperator(
+        task_id="get_crypto_candle_day_past_data",
+        python_callable=_get_crypto_candle_day_past_data,
         do_xcom_push=True,
     )
 
@@ -155,27 +151,22 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(
-        task_id="check_latest_dt_existance", python_callable=_check_latest_dt
-    )
-
     from airflow_modules import env_variables
 
     query_dir = "{}/trino".format(env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
-        op_kwargs={"query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql"},
+        op_kwargs={"query_file": f"{query_dir}/D_Load_crypto_candles_day_001.sql"},
     )
 
     dag_end = DummyOperator(task_id="dag_end")
 
     (
         dag_start
-        >> get_candle_data
+        >> get_crypto_candle_day_past_data
         >> process_candle_data
         >> insert_data_to_cassandra
-        >> check_latest_dt
         >> load_from_cassandra_to_hive
         >> dag_end
     )

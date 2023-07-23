@@ -122,7 +122,7 @@ def main():
                     period = 5  # minute
                     end = time.time()
                     start = end - 60 * period
-                    
+
                     # get data
                     raw_candle_data = polo_operator.get_candles(
                         asset, interval, start, end

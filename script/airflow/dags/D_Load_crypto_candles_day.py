@@ -53,6 +53,7 @@ def _get_candle_data():
     end = time.time()
     start = end - 60 * period
     for asset in assets:
+        logger.info("{}: Load from {} to {}".format(asset, start, end))
         res[asset] = poloniex_operation.get_candle_data(asset, interval, start, end)
         time.sleep(10)
 

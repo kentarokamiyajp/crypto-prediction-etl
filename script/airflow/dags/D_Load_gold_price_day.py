@@ -9,7 +9,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-dag_id = "D_Load_stock_index_value_day"
+
+dag_id = "D_Load_gold_price_day"
 
 
 def _task_failure_alert(context):
@@ -25,39 +26,11 @@ def _task_failure_alert(context):
     send_line_message(message)
 
 
-def _get_stock_index_value():
+def _get_gold_price():
     from airflow_modules import yahoofinancials_operation, utils
     import time
 
-    tickers = [
-        "^NDX",
-        "^DJI",
-        "^DJT",
-        "^DJU",
-        "^BANK",
-        "^IXCO",
-        "^NBI",
-        "^NDXT",
-        "^INDS",
-        "^INSR",
-        "^OFIN",
-        "^IXTC",
-        "^TRAN",
-        "^NYY",
-        "^NYI",
-        "^NY",
-        "^NYL",
-        "^XMI",
-        "^OEX",
-        "^GSPC",
-        "^HSI",
-        "^FCHI",
-        "^BVSP",
-        "^N225",
-        "^RUA",
-        "^XAX",
-    ]
-
+    symbols = ["GC=F"]
     interval = "daily"
 
     # how many days ago you want to get.
@@ -79,42 +52,48 @@ def _get_stock_index_value():
     logger.info("Load from {} to {}".format(from_date, to_date))
 
     return yahoofinancials_operation.get_data_from_yahoofinancials(
-        tickers, interval, from_date, to_date
+        symbols, interval, from_date, to_date
     )
 
 
-def _process_stock_index_value(ti):
+def _process_gold_price(ti):
     from airflow_modules import utils
 
-    stock_index_value = ti.xcom_pull(task_ids="get_stock_index_value")
-    return utils.process_yahoofinancials_data(stock_index_value)
+    gold_price = ti.xcom_pull(task_ids="get_gold_price")
+    return utils.process_yahoofinancials_data(gold_price)
 
 
 def _insert_data_to_cassandra(ti):
     from airflow_modules import cassandra_operation
 
-    keyspace = "stock"
-    table_name = "stock_index_day"
-    stock_index_value = ti.xcom_pull(task_ids="process_stock_index_value_for_ingestion")
+    keyspace = "gold"
+    table_name = "gold_price_day"
+    gold_price = ti.xcom_pull(task_ids="process_gold_price_for_ingestion")
 
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,dt_unix,dt,tz_gmtoffset,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
-    cassandra_operation.insert_data(keyspace, stock_index_value, query)
+    cassandra_operation.insert_data(keyspace, gold_price, query)
+
+
+def _load_from_cassandra_to_hive(query_file):
+    from airflow_modules import trino_operation
+
+    with open(query_file, "r") as f:
+        query = f.read()
+    trino_operation.run(query)
 
 
 def _check_latest_dt():
-    import pytz
     from airflow_modules import cassandra_operation, utils
 
     # check if the expected data is inserted.
-    keyspace = "stock"
-    table_name = "stock_index_day"
-    target_index = "^NDX"
-    tz = pytz.timezone("EST")  # Time zone for NYSE
-    prev_date_ts = datetime.now(tz) - timedelta(days=1)
+    keyspace = "gold"
+    table_name = "gold_price_day"
+    target_index = "GC=F"
+    prev_date_ts = datetime.today() - timedelta(days=1)
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime(
         "%Y-%m-%d"
     )
@@ -135,42 +114,32 @@ def _check_latest_dt():
         raise AirflowFailException("Data missing error !!!")
 
 
-def _load_from_cassandra_to_hive(query_file):
-    from airflow_modules import trino_operation
-
-    with open(query_file, "r") as f:
-        query = f.read()
-    trino_operation.run(query)
-
-
 args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
-    description="Load nasdaq-100 data",
+    description="Load Gold price data",
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
-    tags=["D_Load", "stock_index"],
+    tags=["D_Load", "gold"],
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_stock_index_value = PythonOperator(
-        task_id="get_stock_index_value",
-        python_callable=_get_stock_index_value,
-        do_xcom_push=True,
+    get_gold_price = PythonOperator(
+        task_id="get_gold_price", python_callable=_get_gold_price, do_xcom_push=True
     )
 
-    process_stock_index_value = PythonOperator(
-        task_id="process_stock_index_value_for_ingestion",
-        python_callable=_process_stock_index_value,
+    process_gold_price = PythonOperator(
+        task_id="process_gold_price_for_ingestion",
+        python_callable=_process_gold_price,
         do_xcom_push=True,
     )
 
     insert_data_to_cassandra = PythonOperator(
-        task_id="insert_candle_data_to_cassandra",
+        task_id="insert_gold_price_data_to_cassandra",
         python_callable=_insert_data_to_cassandra,
     )
 
@@ -184,19 +153,19 @@ with DAG(
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
-        op_kwargs={"query_file": f"{query_dir}/D_Load_stock_index_value_day_001.sql"},
+        op_kwargs={"query_file": f"{query_dir}/D_Load_gold_price_day_001.sql"},
     )
 
     trigger = TriggerDagRunOperator(
-        task_id="trigger_dagrun", trigger_dag_id="D_Load_natural_gas_price_day"
+        task_id="trigger_dagrun", trigger_dag_id="D_Load_crude_oil_price_day"
     )
 
     dag_end = DummyOperator(task_id="dag_end")
 
     (
         dag_start
-        >> get_stock_index_value
-        >> process_stock_index_value
+        >> get_gold_price
+        >> process_gold_price
         >> insert_data_to_cassandra
         >> check_latest_dt
         >> load_from_cassandra_to_hive

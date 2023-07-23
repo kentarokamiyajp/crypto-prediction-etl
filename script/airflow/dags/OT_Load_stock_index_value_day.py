@@ -1,15 +1,14 @@
 import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.exceptions import AirflowFailException
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
 
-dag_id = "D_Load_stock_index_value_day"
+
+dag_id = "OT_Load_stock_index_value_day"
 
 
 def _task_failure_alert(context):
@@ -25,7 +24,7 @@ def _task_failure_alert(context):
     send_line_message(message)
 
 
-def _get_stock_index_value():
+def _get_stock_index_value_past_data():
     from airflow_modules import yahoofinancials_operation, utils
     import time
 
@@ -60,33 +59,49 @@ def _get_stock_index_value():
 
     interval = "daily"
 
-    # how many days ago you want to get.
-    target_days = 7
-
-    # seconds of one day
-    seconds_of_one_day = 60 * 60 * 24
+    target_days = 5000  # how many days ago you want to get.
+    seconds_of_one_day = 60 * 60 * 24  # seconds of one day
     period = seconds_of_one_day * target_days
+    to_ts = time.time()  # to this time to get the past data
+    from_ts = to_ts - period  # from this time to get the past data
 
-    # to this time to get the past data
-    to_ts = time.time()
+    res = None
+    window_size = (
+        seconds_of_one_day * 100
+    )  # Get data of <window_size> days for each time.
+    curr_from_ts = from_ts
+    curr_to_ts = curr_from_ts + window_size
+    while True:
+        curr_from_date = utils.get_dt_from_unix_time(curr_from_ts)
+        curr_to_date = utils.get_dt_from_unix_time(curr_to_ts)
 
-    # from this time to get the past data
-    from_ts = to_ts - period
+        logger.info("Load from {} to {}".format(curr_from_date, curr_to_date))
 
-    from_date = utils.get_dt_from_unix_time(from_ts)
-    to_date = utils.get_dt_from_unix_time(to_ts)
+        data = yahoofinancials_operation.get_data_from_yahoofinancials(
+            tickers, interval, curr_from_date, curr_to_date
+        )
 
-    logger.info("Load from {} to {}".format(from_date, to_date))
+        if res == None:
+            res = data
+        else:
+            for symbol_name, data in data.items():
+                res[symbol_name]["prices"].extend(data["prices"])
 
-    return yahoofinancials_operation.get_data_from_yahoofinancials(
-        tickers, interval, from_date, to_date
-    )
+        curr_from_ts = curr_to_ts
+        curr_to_ts = curr_from_ts + window_size
+
+        if curr_from_ts > to_ts:
+            break
+
+        time.sleep(5)
+
+    return res
 
 
 def _process_stock_index_value(ti):
     from airflow_modules import utils
 
-    stock_index_value = ti.xcom_pull(task_ids="get_stock_index_value")
+    stock_index_value = ti.xcom_pull(task_ids="get_stock_index_value_past_data")
     return utils.process_yahoofinancials_data(stock_index_value)
 
 
@@ -105,36 +120,6 @@ def _insert_data_to_cassandra(ti):
     cassandra_operation.insert_data(keyspace, stock_index_value, query)
 
 
-def _check_latest_dt():
-    import pytz
-    from airflow_modules import cassandra_operation, utils
-
-    # check if the expected data is inserted.
-    keyspace = "stock"
-    table_name = "stock_index_day"
-    target_index = "^NDX"
-    tz = pytz.timezone("EST")  # Time zone for NYSE
-    prev_date_ts = datetime.now(tz) - timedelta(days=1)
-    prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime(
-        "%Y-%m-%d"
-    )
-
-    query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_index}'
-    """
-    count = cassandra_operation.check_latest_dt(keyspace, query).one()[0]
-
-    # If there is no data for prev-day even on the market holiday, exit with error.
-    market = "NYSE"
-    if int(count) == 0 and utils.is_makert_open(prev_date, market):
-        logger.error(
-            "There is no data for prev_date ({}, asset={})".format(
-                prev_date, target_index
-            )
-        )
-        raise AirflowFailException("Data missing error !!!")
-
-
 def _load_from_cassandra_to_hive(query_file):
     from airflow_modules import trino_operation
 
@@ -147,19 +132,19 @@ args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
-    description="Load nasdaq-100 data",
+    description="One time operation to load the past data for stock index value day",
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
-    tags=["D_Load", "stock_index"],
+    tags=["OT_Load", "stock"],
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_stock_index_value = PythonOperator(
-        task_id="get_stock_index_value",
-        python_callable=_get_stock_index_value,
+    get_stock_index_value_past_data = PythonOperator(
+        task_id="get_stock_index_value_past_data",
+        python_callable=_get_stock_index_value_past_data,
         do_xcom_push=True,
     )
 
@@ -170,12 +155,8 @@ with DAG(
     )
 
     insert_data_to_cassandra = PythonOperator(
-        task_id="insert_candle_data_to_cassandra",
+        task_id="insert_stock_index_value_data_to_cassandra",
         python_callable=_insert_data_to_cassandra,
-    )
-
-    check_latest_dt = PythonOperator(
-        task_id="check_latest_dt_existance", python_callable=_check_latest_dt
     )
 
     from airflow_modules import env_variables
@@ -187,19 +168,13 @@ with DAG(
         op_kwargs={"query_file": f"{query_dir}/D_Load_stock_index_value_day_001.sql"},
     )
 
-    trigger = TriggerDagRunOperator(
-        task_id="trigger_dagrun", trigger_dag_id="D_Load_natural_gas_price_day"
-    )
-
     dag_end = DummyOperator(task_id="dag_end")
 
     (
         dag_start
-        >> get_stock_index_value
+        >> get_stock_index_value_past_data
         >> process_stock_index_value
         >> insert_data_to_cassandra
-        >> check_latest_dt
         >> load_from_cassandra_to_hive
-        >> trigger
         >> dag_end
     )

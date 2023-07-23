@@ -1,3 +1,5 @@
+DROP TABLE crypto_raw.candles_minute;
+
 CREATE TABLE IF NOT EXISTS crypto_raw.candles_minute (
     id string COMMENT 'id of the crypto currency',
     low float COMMENT 'lowest price over the interval',

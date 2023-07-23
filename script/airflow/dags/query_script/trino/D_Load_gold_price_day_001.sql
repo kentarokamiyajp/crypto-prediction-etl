@@ -1,5 +1,5 @@
 INSERT INTO
-    hive.forex_raw.forex_rate_day (
+    hive.gold_raw.gold_price_day (
         id,
         low,
         high,
@@ -33,11 +33,11 @@ SELECT
     month (from_unixtime (dt_unix)),
     day (from_unixtime (dt_unix))
 FROM
-    cassandra.forex.forex_rate_day
+    cassandra.gold.gold_price_day
 WHERE
     dt > (
         SELECT
             COALESCE(MAX(dt), CAST('1111-01-01' AS date))
         FROM
-            hive.forex_raw.forex_rate_day
+            hive.gold_raw.gold_price_day
     )

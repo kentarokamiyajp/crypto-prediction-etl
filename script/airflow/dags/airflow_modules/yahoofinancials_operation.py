@@ -2,27 +2,41 @@ import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-import datetime
 from yahoofinancials import YahooFinancials
-import pytz
-import env_variables
+import time
+import utils
+from pprint import pprint
 
 
-def get_data_from_yahoofinancials(symbols, days, interval):
-    tz = pytz.timezone("UTC")
-    ts_now = datetime.datetime.now(tz)
-    start_date = (ts_now + datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-    end_date = ts_now.strftime("%Y-%m-%d")
+def get_data_from_yahoofinancials(symbols, interval, start, end):
     yahoo_financials = YahooFinancials(symbols)
     data = yahoo_financials.get_historical_price_data(
-        start_date=start_date, end_date=end_date, time_interval=interval
+        start_date=start, end_date=end, time_interval=interval
     )
     return data
 
 
 if __name__ == "__main__":
-    ticker = ["^NDX"]
-    days = -7
+    symbol = "CL=F"
+
     interval = "daily"
-    data = get_data_from_yahoofinancials(ticker, days, interval)
-    print(data)
+
+    # how many days ago you want to get.
+    target_days = 7
+
+    # seconds of one day
+    seconds_of_one_day = 60 * 60 * 24
+    period = seconds_of_one_day * target_days
+
+    # to this time to get the past data
+    to_ts = time.time()
+
+    # from this time to get the past data
+    from_ts = to_ts - period
+
+    from_date = utils.get_dt_from_unix_time(from_ts)
+    to_date = utils.get_dt_from_unix_time(to_ts)
+
+    data = get_data_from_yahoofinancials([symbol], interval, from_date, to_date)
+
+    pprint(data)

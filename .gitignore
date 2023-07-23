@@ -2,6 +2,7 @@ script/*.icloud
 script/airflow/dags/__pycache__/*
 script/airflow/dags/airflow_modules/__pycache__/*
 script/airflow/dags/airflow_modules/.env
+script/airflow/dags/query_script/trino/init/*
 script/poloniex_apis/__pycache__/*
 script/cassandra_operations/__pycache__/*
 script/trino_operations/__pycache__/*

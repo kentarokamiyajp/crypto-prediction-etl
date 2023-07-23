@@ -1,7 +1,7 @@
-DROP TABLE forex_raw.forex_rate_day;
+DROP TABLE gas_raw.natural_gas_price_day;
 
-CREATE TABLE IF NOT EXISTS forex_raw.forex_rate_day (
-    id string COMMENT 'id of the forex',
+CREATE TABLE IF NOT EXISTS gas_raw.natural_gas_price_day (
+    id string COMMENT 'id of the gas',
     low float COMMENT 'lowest price over the day',
     high float COMMENT 'highest price over the day',
     open float COMMENT 'price at the start time',
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS forex_raw.forex_rate_day (
     tz_gmtoffset int COMMENT 'GMT offset for dt and dt_unix',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
 )
-COMMENT 'forex rate data for each day'
+COMMENT 'natural gas price data for each day'
 PARTITIONED BY(year smallint COMMENT 'year at the market opening', 
     month smallint COMMENT 'month at the market opening', 
     day smallint COMMENT 'day at the market opening')
