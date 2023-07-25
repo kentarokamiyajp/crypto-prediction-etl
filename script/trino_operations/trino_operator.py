@@ -1,6 +1,6 @@
 from trino.dbapi import connect
 from pprint import pprint
-from modules import env_variables
+from common import env_variables
 
 
 class Operator:

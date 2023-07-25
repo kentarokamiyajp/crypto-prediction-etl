@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import datetime
 import subprocess
 import pytz
-from modules import env_variables
+from common import env_variables
 
 base_dir = env_variables.KAFKA_PRODUCER_HOME
 

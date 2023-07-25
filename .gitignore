@@ -8,3 +8,4 @@ script/cassandra_operations/__pycache__/*
 script/trino_operations/__pycache__/*
 script/modules/__pycache__/*
 script/modules/.env
+script/common/env_variables.sh

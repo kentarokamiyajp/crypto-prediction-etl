@@ -5,7 +5,7 @@ from pyspark.sql.streaming import DataStreamWriter
 from pprint import pprint
 from datetime import datetime
 import logging
-from modules import env_variables
+from common import env_variables
 
 
 args = sys.argv

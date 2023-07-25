@@ -8,7 +8,7 @@ from datetime import datetime, date
 import logging
 import random
 from poloniex_apis import get_request
-from modules import env_variables, utils
+from common import env_variables, utils
 import pytz
 
 jst = pytz.timezone("Asia/Tokyo")

@@ -1,5 +1,5 @@
 from confluent_kafka import Consumer
-from modules import env_variables
+from common import env_variables
 
 ################
 c = Consumer(

@@ -1,7 +1,7 @@
 from confluent_kafka import Producer
 import json
 import time
-from modules import env_variables
+from common import env_variables
 
 ####################
 p = Producer({"bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS})

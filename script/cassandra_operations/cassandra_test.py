@@ -1,7 +1,7 @@
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 from pprint import pprint
-from modules import env_variables
+from common import env_variables
 
 auth_provider = PlainTextAuthProvider(
     username=env_variables.CASSANDRA_USERNAME, password=env_variables.CASSANDRA_PASSWORD
