@@ -6,6 +6,6 @@ script/airflow/dags/query_script/trino/init/*
 script/poloniex_apis/__pycache__/*
 script/cassandra_operations/__pycache__/*
 script/trino_operations/__pycache__/*
-script/modules/__pycache__/*
-script/modules/.env
+script/common/.env
 script/common/env_variables.sh
+script/common/__pycache__/*
