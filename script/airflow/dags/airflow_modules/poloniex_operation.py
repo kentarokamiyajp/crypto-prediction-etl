@@ -2,9 +2,9 @@ import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-import env_variables
+import airflow_env_variables
 
-sys.path.append(env_variables.DWH_SCRIPT)
+sys.path.append(airflow_env_variables.DWH_SCRIPT)
 from poloniex_apis import get_request
 import time
 

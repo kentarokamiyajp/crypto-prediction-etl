@@ -14,11 +14,11 @@ dag_id = "OT_Load_natural_gas_price_day"
 
 
 def _task_failure_alert(context):
-    from airflow_modules import env_variables
+    from airflow_modules import airflow_env_variables
 
-    sys.path.append(env_variables.DWH_SCRIPT)
+    sys.path.append(airflow_env_variables.DWH_SCRIPT)
     import pytz
-    from modules.utils import send_line_message
+    from common.utils import send_line_message
 
     jst = pytz.timezone("Asia/Tokyo")
     ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
@@ -134,9 +134,9 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    from airflow_modules import env_variables
+    from airflow_modules import airflow_env_variables
 
-    query_dir = "{}/trino".format(env_variables.QUERY_SCRIPT)
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,

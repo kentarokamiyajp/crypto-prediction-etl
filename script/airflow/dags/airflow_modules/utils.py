@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 from datetime import datetime, timezone, date
 import pandas_market_calendars as mcal
 import pytz
-import env_variables
+import airflow_env_variables
 
 
 def _unix_time_millisecond_to_second(unix_time):
