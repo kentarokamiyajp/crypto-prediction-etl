@@ -9,3 +9,4 @@ script/trino_operations/__pycache__/*
 script/common/.env
 script/common/env_variables.sh
 script/common/__pycache__/*
+script/hadoop_operations/default_conf.sh
