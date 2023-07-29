@@ -7,6 +7,7 @@ script/poloniex_apis/__pycache__/*
 script/cassandra_operations/__pycache__/*
 script/trino_operations/__pycache__/*
 script/common/.env
-script/common/env_variables.sh
+script/common/default_conf.sh
 script/common/__pycache__/*
-script/hadoop_operations/default_conf.sh
+script/local_executions/*
+script/manual_operations/*

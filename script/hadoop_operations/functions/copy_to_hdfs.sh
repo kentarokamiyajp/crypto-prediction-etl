@@ -18,54 +18,38 @@ if [ $# != 3 ]; then
 fi
 
 SRC_TYEP=$1
-SRC_NAME=$2
+SRC_PATH=$2
 DEST_DIR=$3
 
 # Source file/dir type check
 case "${SRC_TYEP}" in
-    "-f")
-    ;;
-    "-d")
-    ;;
-  *)
+"-f") ;;
+
+"-d") ;;
+
+*)
     echo "##############################################"
-    echo "src_type '${SRC_TYEP}' is wrong !!!"
-    echo "src_type: -d -> directory, -f -> file"
+    echo "### src_type '${SRC_TYEP}' is wrong !!!"
+    echo "### src_type: -d -> directory, -f -> file"
     echo "##############################################"
     exit 1
     ;;
 esac
 
-
-DEFAULT_CONF="default_conf.sh"
-
-if [ ! -f "${DEFAULT_CONF}" ]; then
-    echo "##############################################"
-    echo "${DEFAULT_CONF} READ Failded !!!"
-    echo "Wrong working directory or file not found !!!"
-    echo "##############################################"
-    exit 1
-fi
-
-. $DEFAULT_CONF
-
-SRC_PATH="${EXT_DATASET}/${SRC_NAME}"
-
-
 # Source file existance check
 if [ "${SRC_TYEP}" = "-f" ]; then
     if [ ! -f "${SRC_PATH}" ]; then
         echo "##############################################"
-        echo "${SRC_PATH} READ Failded !!!"
-        echo "Check if the src_type is correnct !!! "
+        echo "### READ Failded !!! (${SRC_PATH})"
+        echo "### Check if the src_type is correnct !!! "
         echo "##############################################"
         exit 1
     fi
 else
     if [ ! -d "${SRC_PATH}" ]; then
         echo "##############################################"
-        echo "${SRC_PATH} READ Failded !!!"
-        echo "Check if the src_type is correnct !!! "
+        echo "### READ Failded !!! (${SRC_PATH})"
+        echo "### Check if the src_type is correnct !!! "
         echo "##############################################"
         exit 1
     fi
@@ -79,7 +63,7 @@ if [ $? -ne 0 ]; then
 
     if [ $? -ne 0 ]; then
         echo "##############################################"
-        echo "Failed to create ${DEST_DIR} !!!"
+        echo "### Failed to create ${DEST_DIR} !!!"
         echo "##############################################"
         exit 1
     fi
@@ -89,13 +73,15 @@ fi
 ########
 # main #
 ########
-hadoop fs -copyFromLocal "${SRC_PATH}" "${DEST_DIR}"
+hadoop fs -copyFromLocal -f "${SRC_PATH}" "${DEST_DIR}"
 if [ $? -ne 0 ]; then
     echo "##############################################"
-    echo "Failded to copy ${SRC_PATH} to ${DEST_DIR} !!!"
+    echo "### Failded to copy ${SRC_PATH} to ${DEST_DIR} !!!"
     echo "##############################################"
     exit 1
 fi
 
-echo "COMPLETED !!!"
-echo "(copy from ${SRC_PATH} to ${DEST_DIR})"
+echo "##############################################"
+echo "### COMPLETED !!!"
+echo "### (copy from ${SRC_PATH} to ${DEST_DIR})"
+echo "##############################################"
