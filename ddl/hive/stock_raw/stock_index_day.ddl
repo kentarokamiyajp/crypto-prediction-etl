@@ -1,3 +1,5 @@
+DROP TABLE stock_raw.stock_index_day;
+
 CREATE TABLE IF NOT EXISTS stock_raw.stock_index_day (
     id string COMMENT 'id of the stock index',
     low float COMMENT 'lowest price over the day',

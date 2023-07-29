@@ -1,5 +1,5 @@
 import sys, os
-from modules import env_variables
+from common import env_variables
 
 sys.path.append(env_variables.POLONIEX_HOME)
 

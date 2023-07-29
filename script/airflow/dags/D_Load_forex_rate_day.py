@@ -11,29 +11,65 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "D_Load_forex_rate_day"
+tags = ["D_Load", "forex_rate"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import env_variables
+    from airflow_modules import airflow_env_variables
 
-    sys.path.append(env_variables.DWH_SCRIPT)
+    sys.path.append(airflow_env_variables.DWH_SCRIPT)
     import pytz
-    from modules.utils import send_line_message
+    from common.utils import send_line_message
 
     jst = pytz.timezone("Asia/Tokyo")
     ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Failed] Airflow Dags: {dag_id}"
+
+    message = "{} [Failed]{}\nAirflow Dags: {}".format(ts_now, ",".join(tags), dag_id)
+    send_line_message(message)
+
+
+def _send_warning_notification(optional_message=None):
+    from airflow_modules import airflow_env_variables
+
+    sys.path.append(airflow_env_variables.DWH_SCRIPT)
+    import pytz
+    from common.utils import send_line_message
+
+    jst = pytz.timezone("Asia/Tokyo")
+    ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+    message = "{} [WARNING]{}\nAirflow Dags: {}".format(ts_now, ",".join(tags), dag_id)
+    if optional_message:
+        message += "\n\n" + optional_message
     send_line_message(message)
 
 
 def _get_forex_rate():
-    from airflow_modules import yahoofinancials_operation
+    from airflow_modules import yahoofinancials_operation, utils
+    import time
 
     currencies = ["EURUSD=X", "GBPUSD=X", "JPY=X"]
-    days = -7  # how many days ago you want to get
     interval = "daily"
+
+    # how many days ago you want to get.
+    target_days = 7
+
+    # seconds of one day
+    seconds_of_one_day = 60 * 60 * 24
+    period = seconds_of_one_day * target_days
+
+    # to this time to get the past data
+    to_ts = time.time()
+
+    # from this time to get the past data
+    from_ts = to_ts - period
+
+    from_date = utils.get_dt_from_unix_time(from_ts)
+    to_date = utils.get_dt_from_unix_time(to_ts)
+
+    logger.info("Load from {} to {}".format(from_date, to_date))
+
     return yahoofinancials_operation.get_data_from_yahoofinancials(
-        currencies, days, interval
+        currencies, interval, from_date, to_date
     )
 
 
@@ -87,12 +123,11 @@ def _check_latest_dt():
     # If there is no data for prev-day even on the market holiday, exit with error.
     market = "NYSE"
     if int(count) == 0 and utils.is_makert_open(prev_date, market):
-        logger.error(
-            "There is no data for prev_date ({}, asset={})".format(
-                prev_date, target_index
-            )
+        warning_message = "There is no data for prev_date ({}, asset:{})".format(
+            prev_date, target_index
         )
-        raise AirflowFailException("Data missing error !!!")
+        logger.warn(warning_message)
+        _send_warning_notification(warning_message)
 
 
 args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
@@ -104,7 +139,7 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
-    tags=["D_Load", "forex_rate"],
+    tags=tags,
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
@@ -128,9 +163,9 @@ with DAG(
         task_id="check_latest_dt_existance", python_callable=_check_latest_dt
     )
 
-    from airflow_modules import env_variables
+    from airflow_modules import airflow_env_variables
 
-    query_dir = "{}/trino".format(env_variables.QUERY_SCRIPT)
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,

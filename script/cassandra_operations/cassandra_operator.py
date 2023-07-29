@@ -2,7 +2,7 @@ import sys
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.query import SimpleStatement, BatchStatement
-from modules import env_variables
+from common import env_variables
 
 
 class Operator:

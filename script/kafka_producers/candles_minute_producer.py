@@ -8,7 +8,7 @@ from datetime import datetime, date
 import logging
 import random
 from poloniex_apis import get_request
-from modules import env_variables, utils
+from common import env_variables, utils
 import pytz
 
 jst = pytz.timezone("Asia/Tokyo")
@@ -122,7 +122,7 @@ def main():
                     period = 5  # minute
                     end = time.time()
                     start = end - 60 * period
-                    
+
                     # get data
                     raw_candle_data = polo_operator.get_candles(
                         asset, interval, start, end

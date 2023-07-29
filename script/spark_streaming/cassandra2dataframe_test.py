@@ -1,6 +1,6 @@
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession
-from modules import env_variables
+from common import env_variables
 
 spark = (
     SparkSession.builder.appName("SparkCassandraApp")

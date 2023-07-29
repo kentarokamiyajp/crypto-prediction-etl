@@ -5,7 +5,7 @@ from confluent_kafka import Consumer
 import json
 from datetime import datetime, timezone
 import logging
-from modules import env_variables, utils
+from common import env_variables, utils
 from cassandra_operations import cassandra_operator
 import pytz
 

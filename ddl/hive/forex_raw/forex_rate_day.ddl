@@ -1,3 +1,5 @@
+DROP TABLE forex_raw.forex_rate_day;
+
 CREATE TABLE IF NOT EXISTS forex_raw.forex_rate_day (
     id string COMMENT 'id of the forex',
     low float COMMENT 'lowest price over the day',

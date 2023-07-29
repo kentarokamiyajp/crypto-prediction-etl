@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 from datetime import datetime, timezone, date
 import pandas_market_calendars as mcal
 import pytz
-import env_variables
+import airflow_env_variables
 
 
 def _unix_time_millisecond_to_second(unix_time):
@@ -15,6 +15,14 @@ def _unix_time_millisecond_to_second(unix_time):
 def get_ts_now(_timezone):
     tz = pytz.timezone(_timezone)
     return datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def get_dt_from_unix_time(dt_unix_time):
+    dt_with_time = datetime.fromtimestamp(int(dt_unix_time))
+    dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime(
+        "%Y-%m-%d"
+    )
+    return dt
 
 
 def process_candle_data_from_poloniex(data):
@@ -64,25 +72,28 @@ def process_yahoofinancials_data(data):
         tz_gmtoffset = data["timeZone"]["gmtOffset"]
         for p in prices:
             try:
-                batch_data.append(
-                    [
-                        symbol_name,
-                        float(p["low"]),
-                        float(p["high"]),
-                        float(p["open"]),
-                        float(p["close"]),
-                        float(p["volume"]),
-                        float(p["adjclose"]),
-                        currency,
-                        int(p["date"]),
-                        p["formatted_date"],
-                        int(tz_gmtoffset),
-                        get_ts_now(timezone),
-                    ]
-                )
+                if None not in list(p.values()):
+                    batch_data.append(
+                        [
+                            symbol_name,
+                            float(p["low"]),
+                            float(p["high"]),
+                            float(p["open"]),
+                            float(p["close"]),
+                            float(p["volume"]),
+                            float(p["adjclose"]),
+                            currency,
+                            int(p["date"]),
+                            p["formatted_date"],
+                            int(tz_gmtoffset),
+                            get_ts_now(timezone),
+                        ]
+                    )
+                else:
+                    print("WARN: None data is containing: ", p)
             except Exception as error:
                 print("Error:".format(error))
-                print("data ==>> \n", data)
+                print("data ==>> \n", p)
                 sys.exit(1)
     return batch_data
 

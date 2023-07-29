@@ -4,7 +4,7 @@ INSERT INTO
         low,
         high,
         open,
-        CLOSE,
+        close,
         volume,
         adjclose,
         currency,
@@ -12,26 +12,26 @@ INSERT INTO
         dt,
         tz_gmtoffset,
         ts_insert_utc,
-        YEAR,
-        MONTH,
-        DAY
+        year,
+        month,
+        day
     )
 SELECT
     id,
     low,
     high,
     open,
-CLOSE,
-volume,
-adjclose,
-currency,
-dt_unix,
-dt,
-tz_gmtoffset,
-ts_insert_utc,
-YEAR (from_unixtime (dt_unix)),
-MONTH (from_unixtime (dt_unix)),
-DAY (from_unixtime (dt_unix))
+    close,
+    volume,
+    adjclose,
+    currency,
+    dt_unix,
+    dt,
+    tz_gmtoffset,
+    ts_insert_utc,
+    year (from_unixtime (dt_unix)),
+    month (from_unixtime (dt_unix)),
+    day (from_unixtime (dt_unix))
 FROM
     cassandra.forex.forex_rate_day
 WHERE
