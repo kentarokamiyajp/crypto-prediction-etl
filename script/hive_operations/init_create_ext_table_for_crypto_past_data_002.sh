@@ -49,11 +49,11 @@ for TABLE_NAME in "candles_day" "candles_minute"; do
             export LOG_FILE
 
             # set crypto symbol
-            SYMBOL=$(basename $SRC_FILE .csv | awk -F '-' '{ print $1 "-" $2 }')
+            SYMBOL=$(basename $SRC_FILE .csv | awk -F '-' '{ print $1 "_" $2 }')
             export SYMBOL
 
             echo "##############################################" >>$LOG_FILE
-            echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') START to create external table !!!" >>$LOG_FILE
+            echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') START to insert data !!!" >>$LOG_FILE
             echo "##############################################" >>$LOG_FILE
 
             # main
@@ -61,13 +61,13 @@ for TABLE_NAME in "candles_day" "candles_minute"; do
 
             if [ $? -ne 0 ]; then
                 echo "##############################################" >>$LOG_FILE
-                echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded to create external table !!!" >>$LOG_FILE
+                echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded to insert data !!!" >>$LOG_FILE
                 echo "##############################################" >>$LOG_FILE
                 exit 1
             fi
 
             echo "##############################################" >>$LOG_FILE
-            echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') END to create external table !!!" >>$LOG_FILE
+            echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') END to insert data !!!" >>$LOG_FILE
             echo "##############################################" >>$LOG_FILE
 
             sleep 5
