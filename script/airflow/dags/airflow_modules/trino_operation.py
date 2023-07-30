@@ -9,8 +9,7 @@ from trino_operations import trino_operator
 
 
 def run(query):
-    user = airflow_env_variables.TRINO_USER
-    trino_ope = trino_operator.Operator(user)
+    trino_ope = trino_operator.Operator()
     res = trino_ope.run_query(query)
     return res
 

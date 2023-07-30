@@ -2,7 +2,6 @@ import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
 import logging
 

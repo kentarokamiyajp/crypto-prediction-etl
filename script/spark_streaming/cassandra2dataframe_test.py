@@ -1,3 +1,6 @@
+import os, sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession
 from common import env_variables
@@ -14,7 +17,7 @@ spark = (
 
 df = (
     spark.read.format("org.apache.spark.sql.cassandra")
-    .options(table="coins_list", keyspace="crypto")
+    .options(table="candles_day", keyspace="crypto")
     .load()
 )
 

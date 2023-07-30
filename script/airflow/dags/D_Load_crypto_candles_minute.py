@@ -2,7 +2,6 @@ import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
 import logging
 
@@ -46,19 +45,17 @@ def _get_candle_data():
     from airflow_modules import poloniex_operation
 
     assets = [
-        "BTC_USDT",
-        "ETH_USDT",
-        "BNB_USDT",
-        "XRP_USDT",
         "ADA_USDT",
+        "BCH_USDT",
+        "BNB_USDT",
+        "BTC_USDT",
         "DOGE_USDT",
-        "SOL_USDT",
-        "TRX_USDD",
-        "UNI_USDT",
-        "ATOM_USDT",
-        "GMX_USDT",
-        "SHIB_USDT",
+        "ETH_USDT",
+        "LTC_USDT",
         "MKR_USDT",
+        "SHIB_USDT",
+        "TRX_USDT",
+        "XRP_USDT",
     ]
 
     interval = "MINUTE_1"

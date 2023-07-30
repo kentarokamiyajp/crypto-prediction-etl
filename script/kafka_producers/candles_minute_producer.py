@@ -95,19 +95,17 @@ def _task_failure_alert(message):
 def main():
     # Set parameters for crypto data
     assets = [
-        "BTC_USDT",
-        "ETH_USDT",
-        "BNB_USDT",
-        "XRP_USDT",
         "ADA_USDT",
+        "BCH_USDT",
+        "BNB_USDT",
+        "BTC_USDT",
         "DOGE_USDT",
-        "SOL_USDT",
-        "TRX_USDD",
-        "UNI_USDT",
-        "ATOM_USDT",
-        "GMX_USDT",
-        "SHIB_USDT",
+        "ETH_USDT",
+        "LTC_USDT",
         "MKR_USDT",
+        "SHIB_USDT",
+        "TRX_USDT",
+        "XRP_USDT",
     ]
 
     retry_count = 0
