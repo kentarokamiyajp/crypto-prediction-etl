@@ -11,3 +11,5 @@ script/common/default_conf.sh
 script/common/__pycache__/*
 script/local_executions/*
 script/manual_operations/*
+script/spark_streaming/metastore_db
+script/spark_streaming/derby.log
