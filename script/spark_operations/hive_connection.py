@@ -10,12 +10,7 @@ spark = (
     .getOrCreate()
 )
 
-
-# data = [("Alice", 28), ("Bob", 36), ("Charlie", 24)]
-# columns = ["name", "age"]
-# df = spark.createDataFrame(data, columns)
-
-# df.show()
+spark.sparkContext.setLogLevel("WARN")
 
 df = spark.sql("select count(*) from crypto_raw.candles_day")
 df.show()
