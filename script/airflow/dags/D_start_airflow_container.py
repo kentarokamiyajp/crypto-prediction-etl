@@ -14,17 +14,9 @@ tags = ["PREP"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import airflow_env_variables
+    from airflow_modules import send_notification
 
-    sys.path.append(airflow_env_variables.DWH_SCRIPT)
-    import pytz
-    from common.utils import send_line_message
-
-    jst = pytz.timezone("Asia/Tokyo")
-    ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-
-    message = "{} [Failed]{}\nAirflow Dags: {}".format(ts_now, ",".join(tags), dag_id)
-    send_line_message(message)
+    send_notification(dag_id, tags, "ERROR")
 
 
 args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
@@ -60,10 +52,6 @@ with DAG(
             env_variables.UBUNTU_AIRFLOW_DOCKER_HOME
         ),
     )
-
-    # trigger = TriggerDagRunOperator(
-    #     task_id="trigger_dagrun", trigger_dag_id="D_Load_stock_index_value_day"
-    # )
 
     dag_end = DummyOperator(task_id="dag_end")
 

@@ -13,32 +13,15 @@ tags = ["D_Load", "stock_index"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import airflow_env_variables
+    from airflow_modules import send_notification
 
-    sys.path.append(airflow_env_variables.DWH_SCRIPT)
-    import pytz
-    from common.utils import send_line_message
-
-    jst = pytz.timezone("Asia/Tokyo")
-    ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-
-    message = "{} [Failed]{}\nAirflow Dags: {}".format(ts_now, ",".join(tags), dag_id)
-    send_line_message(message)
+    send_notification(dag_id, tags, "ERROR")
 
 
 def _send_warning_notification(optional_message=None):
-    from airflow_modules import airflow_env_variables
+    from airflow_modules import send_notification
 
-    sys.path.append(airflow_env_variables.DWH_SCRIPT)
-    import pytz
-    from common.utils import send_line_message
-
-    jst = pytz.timezone("Asia/Tokyo")
-    ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-    message = "{} [WARNING]{}\nAirflow Dags: {}".format(ts_now, ",".join(tags), dag_id)
-    if optional_message:
-        message += "\n\n" + optional_message
-    send_line_message(message)
+    send_notification(dag_id, tags, "WARNING", optional_message)
 
 
 def _get_stock_index_value():
