@@ -45,18 +45,20 @@ with DAG(
 
     sys.path.append(airflow_env_variables.DWH_SCRIPT)
     from common import env_variables
-    
+
     ssh_hook = SSHHook(
         remote_host=env_variables.UBUNTU_HOST,
         username=env_variables.UBUNTU_USER,
         key_file=env_variables.AIRFLOW_PRIVATE_KEY,
         port=22,
     )
-    
+
     ssh_operation = SSHOperator(
         task_id="ssh_operation",
         ssh_hook=ssh_hook,
-        command=f"docker-compose stop",
+        command="cd {} && docker-compose stop && exit".format(
+            env_variables.UBUNTU_AIRFLOW_DOCKER_HOME
+        ),
     )
 
     # trigger = TriggerDagRunOperator(
