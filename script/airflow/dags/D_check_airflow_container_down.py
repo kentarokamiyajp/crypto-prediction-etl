@@ -27,7 +27,7 @@ def _task_failure_alert(context):
     send_line_message(message)
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+args = {"owner": "airflow", "retries": 0, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
@@ -56,7 +56,9 @@ with DAG(
     ssh_operation = SSHOperator(
         task_id="ssh_operation",
         ssh_hook=ssh_hook,
-        command=" docker inspect -f '{{.State.Status}}' airflow-webserver ; if [ $? -eq 0 ]; then exit 1; else exit 0; fi ",
+        command=" sh {}/airflow_modules/get_container_status.sh; if [ $? -eq 0 ]; then exit 1; else exit 0; fi ".format(
+            env_variables.UBUNTU_AIRFLOW_DAGS_HOME
+        ),
     )
 
     dag_end = DummyOperator(task_id="dag_end")

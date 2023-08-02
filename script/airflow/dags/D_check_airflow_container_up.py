@@ -48,9 +48,11 @@ with DAG(
     ssh_operation = SSHOperator(
         task_id="ssh_operation",
         ssh_hook=ssh_hook,
-        command=" docker inspect -f '{{.State.Status}}' airflow-webserver ; if [ $? -eq 0 ]; then exit 0; else exit 1; fi ",
+        command=" sh {}/airflow_modules/get_container_status.sh; if [ $? -eq 0 ]; then exit 0; else exit 1; fi ".format(
+            env_variables.UBUNTU_AIRFLOW_DAGS_HOME
+        ),
     )
-
+    
     dag_end = DummyOperator(task_id="dag_end")
 
     (dag_start >> ssh_operation >> dag_end)
