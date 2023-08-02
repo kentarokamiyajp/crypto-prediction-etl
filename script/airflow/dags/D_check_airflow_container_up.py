@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-dag_id = "D_start_airflow_container"
+dag_id = "D_check_airflow_container_up"
 tags = ["PREP"]
 
 
@@ -19,12 +19,12 @@ def _task_failure_alert(context):
     send_notification(dag_id, tags, "ERROR")
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+args = {"owner": "airflow", "retries": 0, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
-    description="Start airflow docker containers",
-    schedule_interval="0 0 * * *",
+    description="Check if airflow container is started",
+    schedule_interval="10 0 * * 1-5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -48,9 +48,7 @@ with DAG(
     ssh_operation = SSHOperator(
         task_id="ssh_operation",
         ssh_hook=ssh_hook,
-        command="cd {} && docker-compose start && if [ $? -eq 0 ]; then exit 0; else 1; fi".format(
-            env_variables.UBUNTU_AIRFLOW_DOCKER_HOME
-        ),
+        command=" docker inspect -f '{{.State.Status}}' airflow-webserver ; if [ $? -eq 0 ]; then exit 0; else exit 1; fi ",
     )
 
     dag_end = DummyOperator(task_id="dag_end")
