@@ -1,4 +1,3 @@
-import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
@@ -15,7 +14,7 @@ tags = ["OT_Load", "gas"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import send_notification
+    from airflow_modules.utils import send_notification
 
     send_notification(dag_id, tags, "ERROR")
 
@@ -89,15 +88,62 @@ def _insert_data_to_cassandra(ti):
     cassandra_operation.insert_data(keyspace, natural_gas_price, query)
 
 
-def _load_from_cassandra_to_hive(query_file):
+
+def _load_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
-    with open(query_file, "r") as f:
-        query = f.read()
+    query = """
+    DELETE FROM hive.gas_raw.natural_gas_price_day
+    """
+    logger.info("RUN QUERY")
+    logger.info(query)
+    trino_operation.run(query)
+
+    query = """
+    INSERT INTO
+        hive.gas_raw.natural_gas_price_day (
+            id,
+            low,
+            high,
+            open,
+            close,
+            volume,
+            adjclose,
+            currency,
+            dt_unix,
+            dt,
+            tz_gmtoffset,
+            ts_insert_utc,
+            year,
+            month,
+            day
+        )
+    SELECT
+        id,
+        low,
+        high,
+        open,
+        close,
+        volume,
+        adjclose,
+        currency,
+        dt_unix,
+        dt,
+        tz_gmtoffset,
+        ts_insert_utc,
+        year (from_unixtime (dt_unix)),
+        month (from_unixtime (dt_unix)),
+        day (from_unixtime (dt_unix))
+    FROM
+        cassandra.gas.natural_gas_price_day
+    """
+    logger.info("RUN QUERY")
+    logger.info(query)
     trino_operation.run(query)
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+
+args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
@@ -106,44 +152,44 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
+    concurrency=1,  # can run N tasks at the same time
+    max_active_runs=1,  # can run N DAGs at the same time
     tags=tags,
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_natural_gas_price_past_data = PythonOperator(
-        task_id="get_natural_gas_price_past_data",
-        python_callable=_get_natural_gas_price_past_data,
-        do_xcom_push=True,
-    )
+    # get_crude_oil_price_past_data = PythonOperator(
+    #     task_id="get_crude_oil_price_past_data",
+    #     python_callable=_get_crude_oil_price_past_data,
+    #     do_xcom_push=True,
+    # )
 
-    process_natural_gas_price = PythonOperator(
-        task_id="process_natural_gas_price_for_ingestion",
-        python_callable=_process_natural_gas_price,
-        do_xcom_push=True,
-    )
+    # process_crude_oil_price = PythonOperator(
+    #     task_id="process_crude_oil_price_for_ingestion",
+    #     python_callable=_process_crude_oil_price,
+    #     do_xcom_push=True,
+    # )
 
-    insert_data_to_cassandra = PythonOperator(
-        task_id="insert_natural_gas_price_data_to_cassandra",
-        python_callable=_insert_data_to_cassandra,
-    )
+    # insert_data_to_cassandra = PythonOperator(
+    #     task_id="insert_crude_oil_price_data_to_cassandra",
+    #     python_callable=_insert_data_to_cassandra,
+    # )
 
-    from airflow_modules import airflow_env_variables
-
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
-        op_kwargs={"query_file": f"{query_dir}/D_Load_natural_gas_price_day_001.sql"},
     )
 
     dag_end = DummyOperator(task_id="dag_end")
 
-    (
-        dag_start
-        >> get_natural_gas_price_past_data
-        >> process_natural_gas_price
-        >> insert_data_to_cassandra
-        >> load_from_cassandra_to_hive
-        >> dag_end
-    )
+    # (
+    #     dag_start
+    #     >> get_crude_oil_price_past_data
+    #     >> process_crude_oil_price
+    #     >> insert_data_to_cassandra
+    #     >> load_from_cassandra_to_hive
+    #     >> dag_end
+    # )
+
+    (dag_start >> load_from_cassandra_to_hive >> dag_end)

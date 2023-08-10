@@ -15,18 +15,18 @@ tags = ["D_Create", "crypto"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import send_notification
+    from airflow_modules.utils import send_notification
 
     send_notification(dag_id, tags, "ERROR")
 
 
 def _send_warning_notification(optional_message=None):
-    from airflow_modules import send_notification
+    from airflow_modules.utils import send_notification
 
     send_notification(dag_id, tags, "WARNING", optional_message)
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=10)}
+args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
@@ -35,6 +35,8 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
+    concurrency=1,  # can run N tasks at the same time
+    max_active_runs=1,  # can run N DAGs at the same time
     tags=tags,
     default_args=args,
 ) as dag:

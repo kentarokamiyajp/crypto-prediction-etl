@@ -11,7 +11,7 @@ sys.path.append(airflow_env_variables.DWH_SCRIPT)
 from common.utils import send_line_message
 
 
-def send_notification(dag_id, tags, type, optional_message):
+def send_notification(dag_id, tags, type, optional_message=None):
     jst = pytz.timezone("Asia/Tokyo")
     ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
     message = "{} [{}]{}\nAirflow Dags: {}".format(ts_now, ",".join(tags), type, dag_id)

@@ -1,4 +1,3 @@
-import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
@@ -12,7 +11,7 @@ tags = ["OT_Load", "crypto"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import send_notification
+    from airflow_modules.utils import send_notification
 
     send_notification(dag_id, tags, "ERROR")
 
@@ -103,15 +102,72 @@ def _insert_data_to_cassandra(ti):
     cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
-def _load_from_cassandra_to_hive(query_file):
+def _load_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
-    with open(query_file, "r") as f:
-        query = f.read()
+    query = """
+    DELETE FROM hive.crypto_raw.candles_day
+    """
+    logger.info("RUN QUERY")
+    logger.info(query)
+    trino_operation.run(query)
+
+    query = """
+    INSERT INTO
+        hive.crypto_raw.candles_day (
+            id,
+            low,
+            high,
+            open,
+            close,
+            amount,
+            quantity,
+            buyTakerAmount,
+            buyTakerQuantity,
+            tradeCount,
+            ts,
+            weightedAverage,
+            interval_type,
+            startTime,
+            closeTime,
+            dt,
+            ts_insert_utc,
+            year,
+            month,
+            day,
+            hour
+        )
+    SELECT
+        id,
+        low,
+        high,
+        open,
+        close,
+        amount,
+        quantity,
+        buyTakerAmount,
+        buyTakerQuantity,
+        tradeCount,
+        ts,
+        weightedAverage,
+        interval,
+        startTime,
+        closeTime,
+        dt,
+        ts_insert_utc,
+        year (from_unixtime (closeTime)),
+        month (from_unixtime (closeTime)),
+        day (from_unixtime (closeTime)),
+        hour (from_unixtime (closeTime))
+    FROM
+        cassandra.crypto.candles_day
+    """
+    logger.info("RUN QUERY")
+    logger.info(query)
     trino_operation.run(query)
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=5)}
+args = {"owner": "airflow", "retries": 1, "retry_delay": timedelta(minutes=5)}
 
 with DAG(
     dag_id,
@@ -120,44 +176,44 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
+    concurrency=1,  # can run N tasks at the same time
+    max_active_runs=1,  # can run N DAGs at the same time
     tags=tags,
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_crypto_candle_day_past_data = PythonOperator(
-        task_id="get_crypto_candle_day_past_data",
-        python_callable=_get_crypto_candle_day_past_data,
-        do_xcom_push=True,
-    )
+    # get_crude_oil_price_past_data = PythonOperator(
+    #     task_id="get_crude_oil_price_past_data",
+    #     python_callable=_get_crude_oil_price_past_data,
+    #     do_xcom_push=True,
+    # )
 
-    process_candle_data = PythonOperator(
-        task_id="process_candle_data_for_ingestion",
-        python_callable=_process_candle_data,
-        do_xcom_push=True,
-    )
+    # process_crude_oil_price = PythonOperator(
+    #     task_id="process_crude_oil_price_for_ingestion",
+    #     python_callable=_process_crude_oil_price,
+    #     do_xcom_push=True,
+    # )
 
-    insert_data_to_cassandra = PythonOperator(
-        task_id="insert_candle_data_to_cassandra",
-        python_callable=_insert_data_to_cassandra,
-    )
+    # insert_data_to_cassandra = PythonOperator(
+    #     task_id="insert_crude_oil_price_data_to_cassandra",
+    #     python_callable=_insert_data_to_cassandra,
+    # )
 
-    from airflow_modules import airflow_env_variables
-
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
-        op_kwargs={"query_file": f"{query_dir}/D_Load_crypto_candles_day_001.sql"},
     )
 
     dag_end = DummyOperator(task_id="dag_end")
 
-    (
-        dag_start
-        >> get_crypto_candle_day_past_data
-        >> process_candle_data
-        >> insert_data_to_cassandra
-        >> load_from_cassandra_to_hive
-        >> dag_end
-    )
+    # (
+    #     dag_start
+    #     >> get_crude_oil_price_past_data
+    #     >> process_crude_oil_price
+    #     >> insert_data_to_cassandra
+    #     >> load_from_cassandra_to_hive
+    #     >> dag_end
+    # )
+
+    (dag_start >> load_from_cassandra_to_hive >> dag_end)

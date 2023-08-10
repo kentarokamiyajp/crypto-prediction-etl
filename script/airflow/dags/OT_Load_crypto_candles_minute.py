@@ -1,4 +1,3 @@
-import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
@@ -6,13 +5,14 @@ from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARN)
 
 dag_id = "OT_Load_crypto_candles_minute"
 tags = ["OT_Load", "crypto"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import send_notification
+    from airflow_modules.utils import send_notification
 
     send_notification(dag_id, tags, "ERROR")
 
@@ -43,8 +43,11 @@ def _get_crypto_candle_minute_past_data():
     to_time = time.time()  # from this time to get the past data
     from_time = to_time - period  # to this time to get the past data
 
+    # Each GET request, only 500 records we can get.
+    # This means data for 500 minutes per one request.
+    # 1 day = 1440 minutes
     res = {}
-    window_size = seconds_of_one_day * 7  # Get data of <window_size> days for each time.
+    window_size = 60 * 500  # Get data of <window_size> minutes for each time.
     curr_from_time = from_time
     curr_to_time = curr_from_time + window_size
     while True:
@@ -53,6 +56,7 @@ def _get_crypto_candle_minute_past_data():
                 logger.info(
                     "{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time)
                 )
+                print("{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time))
                 data = poloniex_operation.get_candle_data(
                     asset, interval, curr_from_time, curr_to_time
                 )
@@ -68,7 +72,8 @@ def _get_crypto_candle_minute_past_data():
                         asset
                     )
                 )
-            time.sleep(5)
+            time.sleep(2)
+
         curr_from_time = curr_to_time
         curr_to_time = curr_from_time + window_size
 
@@ -103,15 +108,72 @@ def _insert_data_to_cassandra(ti):
     cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
-def _load_from_cassandra_to_hive(query_file):
+def _load_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
-    with open(query_file, "r") as f:
-        query = f.read()
+    query = """
+    DELETE FROM hive.crypto_raw.candles_minute
+    """
+    logger.info("RUN QUERY")
+    logger.info(query)
+    trino_operation.run(query)
+
+    query = """
+    INSERT INTO
+        hive.crypto_raw.candles_minute (
+            id,
+            low,
+            high,
+            open,
+            close,
+            amount,
+            quantity,
+            buyTakerAmount,
+            buyTakerQuantity,
+            tradeCount,
+            ts,
+            weightedAverage,
+            interval_type,
+            startTime,
+            closeTime,
+            dt,
+            ts_insert_utc,
+            year,
+            month,
+            day,
+            hour
+        )
+    SELECT
+        id,
+        low,
+        high,
+        open,
+        close,
+        amount,
+        quantity,
+        buyTakerAmount,
+        buyTakerQuantity,
+        tradeCount,
+        ts,
+        weightedAverage,
+        interval,
+        startTime,
+        closeTime,
+        dt,
+        ts_insert_utc,
+        year (from_unixtime (closeTime)),
+        month (from_unixtime (closeTime)),
+        day (from_unixtime (closeTime)),
+        hour (from_unixtime (closeTime))
+    FROM
+        cassandra.crypto.candles_minute
+    """
+    logger.info("RUN QUERY")
+    logger.info(query)
     trino_operation.run(query)
 
 
-args = {"owner": "airflow", "retries": 5, "retry_delay": timedelta(minutes=5)}
+args = {"owner": "airflow", "retries": 0, "retry_delay": timedelta(minutes=5)}
 
 with DAG(
     dag_id,
@@ -120,6 +182,8 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
+    concurrency=1,  # can run N tasks at the same time
+    max_active_runs=1,  # can run N DAGs at the same time
     tags=tags,
     default_args=args,
 ) as dag:
@@ -142,13 +206,9 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    from airflow_modules import airflow_env_variables
-
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
-        op_kwargs={"query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql"},
     )
 
     dag_end = DummyOperator(task_id="dag_end")

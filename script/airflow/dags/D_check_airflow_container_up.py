@@ -14,7 +14,7 @@ tags = ["PREP"]
 
 
 def _task_failure_alert(context):
-    from airflow_modules import send_notification
+    from airflow_modules.utils import send_notification
 
     send_notification(dag_id, tags, "ERROR")
 
