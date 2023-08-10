@@ -168,6 +168,7 @@ def main():
                     partition=random.randint(0, num_partitions - 1),
                     callback=_receipt,
                 )
+                p.poll(0)
                 time.sleep(5)
     except Exception as error:
         ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
