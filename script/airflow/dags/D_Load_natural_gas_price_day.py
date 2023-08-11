@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
@@ -166,7 +165,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load Natural Gas price data",
-    schedule_interval=None,
+    schedule_interval="0 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -180,6 +179,7 @@ with DAG(
     get_natural_gas_price = PythonOperator(
         task_id="get_natural_gas_price",
         python_callable=_get_natural_gas_price,
+        pool="yfinance_pool",
         do_xcom_push=True,
     )
 
@@ -231,10 +231,6 @@ with DAG(
         },
     )
 
-    trigger = TriggerDagRunOperator(
-        task_id="trigger_dagrun", trigger_dag_id="D_Load_gold_price_day"
-    )
-
     dag_end = DummyOperator(task_id="dag_end")
 
     (
@@ -246,6 +242,5 @@ with DAG(
         >> delete_past_data_from_hive
         >> hive_deletion_check
         >> load_from_cassandra_to_hive
-        >> trigger
         >> dag_end
     )

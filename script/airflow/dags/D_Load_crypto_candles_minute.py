@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
@@ -43,7 +42,7 @@ def _get_candle_data():
     ]
 
     interval = "MINUTE_1"
-    
+
     target_days = 2  # data of how many days ago you want to get.
     seconds_of_one_day = 60 * 60 * 24  # seconds of one day
     period = seconds_of_one_day * target_days
@@ -64,7 +63,9 @@ def _get_candle_data():
             while curr_retry_cnt <= max_retry_cnt:
                 try:
                     logger.info(
-                        "{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time)
+                        "{}: Load from {} to {}".format(
+                            asset, curr_from_time, curr_to_time
+                        )
                     )
                     data = poloniex_operation.get_candle_data(
                         asset, interval, curr_from_time, curr_to_time
@@ -78,12 +79,12 @@ def _get_candle_data():
                     break
                 except Exception as error:
                     logger.error("Error: {}".format(error))
-                    curr_retry_cnt+=1
+                    curr_retry_cnt += 1
                     time.sleep(600)
-                    
+
                 if curr_retry_cnt > max_retry_cnt:
                     raise AirflowFailException("Poloniex API is dead now.")
-                
+
         curr_from_time = curr_to_time
         curr_to_time = curr_from_time + window_size
 
@@ -209,7 +210,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load candles minute data daily",
-    schedule_interval=None,
+    schedule_interval="0 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -223,6 +224,7 @@ with DAG(
     get_candle_data = PythonOperator(
         task_id="get_candle_minite_for_1day",
         python_callable=_get_candle_data,
+        pool="poloniex_pool",
         do_xcom_push=True,
     )
 

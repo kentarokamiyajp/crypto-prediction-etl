@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
@@ -166,7 +165,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load Crude Oil price data",
-    schedule_interval=None,
+    schedule_interval="0 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -180,6 +179,7 @@ with DAG(
     get_crude_oil_price = PythonOperator(
         task_id="get_crude_oil_price",
         python_callable=_get_crude_oil_price,
+        pool="yfinance_pool",
         do_xcom_push=True,
     )
 

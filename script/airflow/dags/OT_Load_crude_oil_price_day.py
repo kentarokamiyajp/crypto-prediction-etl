@@ -92,10 +92,10 @@ def _load_from_cassandra_to_hive():
     query = """
     DELETE FROM hive.oil_raw.crude_oil_price_day
     """
-    logger.info('RUN QUERY')
+    logger.info("RUN QUERY")
     logger.info(query)
     trino_operation.run(query)
-    
+
     query = """
     INSERT INTO
         hive.oil_raw.crude_oil_price_day (
@@ -134,7 +134,7 @@ def _load_from_cassandra_to_hive():
     FROM
         cassandra.oil.crude_oil_price_day
     """
-    logger.info('RUN QUERY')
+    logger.info("RUN QUERY")
     logger.info(query)
     trino_operation.run(query)
 
@@ -187,9 +187,5 @@ with DAG(
     #     >> load_from_cassandra_to_hive
     #     >> dag_end
     # )
-    
-    (
-        dag_start
-        >> load_from_cassandra_to_hive
-        >> dag_end
-    )
+
+    (dag_start >> load_from_cassandra_to_hive >> dag_end)

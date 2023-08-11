@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
@@ -88,7 +87,6 @@ def _insert_data_to_cassandra(ti):
     cassandra_operation.insert_data(keyspace, natural_gas_price, query)
 
 
-
 def _load_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
@@ -140,7 +138,6 @@ def _load_from_cassandra_to_hive():
     logger.info("RUN QUERY")
     logger.info(query)
     trino_operation.run(query)
-
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}

@@ -52,7 +52,7 @@ with DAG(
             env_variables.UBUNTU_AIRFLOW_DAGS_HOME
         ),
     )
-    
+
     dag_end = DummyOperator(task_id="dag_end")
 
     (dag_start >> ssh_operation >> dag_end)

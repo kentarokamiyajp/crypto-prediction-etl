@@ -1,8 +1,8 @@
 import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from datetime import datetime, timedelta, date
 import logging
@@ -57,7 +57,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Create mart tables for crypto price indicators",
-    schedule_interval=None,
+    schedule_interval="30 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -67,6 +67,19 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
+
+    wait_for_D_Load_crypto_candles_day = ExternalTaskSensor(
+        task_id="wait_for_D_Load_crypto_candles_day",
+        external_dag_id="D_Load_crypto_candles_day",
+        external_task_id="dag_end",
+        allowed_states=["success"],
+        failed_states=["failed", "skipped"],
+        check_existence=True,
+        poke_interval=60,
+        execution_delta=timedelta(minutes=30),
+        mode="reschedule",
+        timeout=1800,
+    )
 
     from airflow_modules import airflow_env_variables
 
@@ -127,6 +140,7 @@ with DAG(
 
     (
         dag_start
+        >> wait_for_D_Load_crypto_candles_day
         >> spark_create_indicators
         >> delete_from_hive_mart_table
         >> insert_into_hive_mart_table

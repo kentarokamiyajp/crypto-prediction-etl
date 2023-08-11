@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
@@ -181,7 +180,10 @@ with DAG(
     dag_start = DummyOperator(task_id="dag_start")
 
     get_candle_data = PythonOperator(
-        task_id="get_candle_day", python_callable=_get_candle_data, do_xcom_push=True
+        task_id="get_candle_day",
+        python_callable=_get_candle_data,
+        pool="poloniex_pool",
+        do_xcom_push=True,
     )
 
     process_candle_data = PythonOperator(
@@ -232,10 +234,6 @@ with DAG(
         },
     )
 
-    trigger = TriggerDagRunOperator(
-        task_id="trigger_dagrun", trigger_dag_id="D_Load_crypto_candles_minute"
-    )
-
     dag_end = DummyOperator(task_id="dag_end")
 
     (
@@ -247,6 +245,5 @@ with DAG(
         >> delete_past_data_from_hive
         >> hive_deletion_check
         >> load_from_cassandra_to_hive
-        >> trigger
         >> dag_end
     )

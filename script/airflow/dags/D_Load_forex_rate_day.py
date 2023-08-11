@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
@@ -178,7 +177,10 @@ with DAG(
     dag_start = DummyOperator(task_id="dag_start")
 
     get_forex_rate = PythonOperator(
-        task_id="get_forex_rate", python_callable=_get_forex_rate, do_xcom_push=True
+        task_id="get_forex_rate",
+        python_callable=_get_forex_rate,
+        pool="yfinance_pool",
+        do_xcom_push=True,
     )
 
     process_forex_rate = PythonOperator(
@@ -229,10 +231,6 @@ with DAG(
         },
     )
 
-    trigger = TriggerDagRunOperator(
-        task_id="trigger_dagrun", trigger_dag_id="D_Load_stock_index_value_day"
-    )
-
     dag_end = DummyOperator(task_id="dag_end")
 
     (
@@ -244,6 +242,5 @@ with DAG(
         >> delete_past_data_from_hive
         >> hive_deletion_check
         >> load_from_cassandra_to_hive
-        >> trigger
         >> dag_end
     )
