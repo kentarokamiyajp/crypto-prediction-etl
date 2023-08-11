@@ -43,22 +43,53 @@ def _get_candle_data():
     ]
 
     interval = "MINUTE_1"
+    
+    target_days = 2  # data of how many days ago you want to get.
+    seconds_of_one_day = 60 * 60 * 24  # seconds of one day
+    period = seconds_of_one_day * target_days
+    to_time = time.time()  # from this time to get the past data
+    from_time = to_time - period  # to this time to get the past data
 
+    # Each GET request, only 500 records we can get.
+    # This means data for 500 minutes per one request.
+    # 1 day = 1440 minutes
     res = {}
-    initial_end = time.time()
-    for asset in assets:
-        for i in reversed(range(1, 5)):
-            start = initial_end - (60 * 500 * i)
-            end = initial_end - (60 * 500 * (i - 1))
+    window_size = 60 * 500  # Get data of <window_size> minutes for each time.
+    curr_from_time = from_time
+    curr_to_time = curr_from_time + window_size
+    while True:
+        for asset in assets:
+            max_retry_cnt = 5
+            curr_retry_cnt = 0
+            while curr_retry_cnt <= max_retry_cnt:
+                try:
+                    logger.info(
+                        "{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time)
+                    )
+                    data = poloniex_operation.get_candle_data(
+                        asset, interval, curr_from_time, curr_to_time
+                    )
+                    if data != None:
+                        if asset in res:
+                            res[asset].extend(data)
+                        else:
+                            res[asset] = data
+                    time.sleep(2)
+                    break
+                except Exception as error:
+                    logger.error("Error: {}".format(error))
+                    curr_retry_cnt+=1
+                    time.sleep(600)
+                    
+                if curr_retry_cnt > max_retry_cnt:
+                    raise AirflowFailException("Poloniex API is dead now.")
+                
+        curr_from_time = curr_to_time
+        curr_to_time = curr_from_time + window_size
 
-            logger.info("{}: Load from {} to {}".format(asset, start, end))
+        if curr_from_time > to_time:
+            break
 
-            candle_data = poloniex_operation.get_candle_data(asset, interval, start, end)
-            if asset in res:
-                res[asset] += candle_data
-            else:
-                res[asset] = candle_data
-            time.sleep(10)
     return res
 
 

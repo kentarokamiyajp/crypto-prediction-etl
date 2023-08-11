@@ -1,17 +1,15 @@
 import sys
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.apache.spark.operators.spark_sql import SparkSqlOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
 
-dag_id = "D_Create_crypto_idc_day"
-tags = ["D_Create", "crypto"]
+dag_id = "OT_Create_crypto_indicator_day"
+tags = ["OT_Create", "crypto"]
 
 
 def _task_failure_alert(context):
@@ -20,10 +18,15 @@ def _task_failure_alert(context):
     send_notification(dag_id, tags, "ERROR")
 
 
-def _send_warning_notification(optional_message=None):
-    from airflow_modules.utils import send_notification
+def _init_hive_mart_table(query_file):
+    from airflow_modules import trino_operation
 
-    send_notification(dag_id, tags, "WARNING", optional_message)
+    with open(query_file, "r") as f:
+        query = f.read()
+
+    logger.info("RUN QUERY")
+    logger.info(query)
+    trino_operation.run(query)
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
@@ -46,12 +49,26 @@ with DAG(
 
     sys.path.append(airflow_env_variables.DWH_SCRIPT)
     from common import env_variables
+    from airflow_modules import airflow_env_variables
 
-    load_raw_table = SparkSubmitOperator(
-        task_id="process_candle_data_for_ingestion",
-        application="{}/pyspark/D_Create_crypto_idc_day_001.py".format(
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
+    init_hive_mart_table = PythonOperator(
+        task_id="init_hive_mart_table",
+        python_callable=_init_hive_mart_table,
+        op_kwargs={"query_file": f"{query_dir}/OT_Create_crypto_ind_day_001.sql"},
+    )
+
+    create_crypto_indicators = SparkSubmitOperator(
+        task_id="create_crypto_indicators",
+        application="{}/pyspark/OT_Create_crypto_ind_day_001.py".format(
             airflow_env_variables.QUERY_SCRIPT
         ),
+        conf={
+            "spark.eventLog.dir": "hdfs://{}:{}/user/spark/applicationHistory".format(
+                env_variables.HISTORY_SERVER_HOST, env_variables.HISTORY_SERVER_POST
+            ),
+            "spark.eventLog.enabled": "true",
+        },
         conn_id="spark_conn",
         application_args=[
             env_variables.SPARK_MASTER_HOST,
@@ -61,17 +78,6 @@ with DAG(
         ],
     )
 
-    spark_sql_job = SparkSqlOperator(
-        sql="select count(*) from crypto_raw.candles_day",
-        master="spark://{}:{}".format(
-            env_variables.SPARK_MASTER_HOST, env_variables.SPARK_MASTER_PORT
-        ),
-        conf="spark.hadoop.hive.metastore.uris=thrift://{}:{}".format(
-            env_variables.HIVE_METASTORE_HOST, env_variables.HIVE_METASTORE_PORT
-        ),
-        task_id="spark_sql_job",
-    )
-
     dag_end = DummyOperator(task_id="dag_end")
 
-    (dag_start >> load_raw_table >> spark_sql_job >> dag_end)
+    (dag_start >> init_hive_mart_table >> create_crypto_indicators >> dag_end)

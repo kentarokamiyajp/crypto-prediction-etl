@@ -1,11 +1,11 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARN)
 
 dag_id = "OT_Load_crypto_candles_minute"
 tags = ["OT_Load", "crypto"]
@@ -19,7 +19,7 @@ def _task_failure_alert(context):
 
 def _get_crypto_candle_minute_past_data():
     import time
-    from airflow_modules import poloniex_operation
+    from airflow_modules import poloniex_operation, utils, cassandra_operation
 
     assets = [
         "ADA_USDT",
@@ -50,13 +50,17 @@ def _get_crypto_candle_minute_past_data():
     window_size = 60 * 500  # Get data of <window_size> minutes for each time.
     curr_from_time = from_time
     curr_to_time = curr_from_time + window_size
+    batch_size = 1000
+    curr_size = 0
     while True:
         for asset in assets:
+            curr_size += 1
             try:
                 logger.info(
-                    "{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time)
+                    "{}: Load from {} to {} ({}/{})".format(
+                        asset, curr_from_time, curr_to_time, curr_size, batch_size
+                    )
                 )
-                print("{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time))
                 data = poloniex_operation.get_candle_data(
                     asset, interval, curr_from_time, curr_to_time
                 )
@@ -67,11 +71,26 @@ def _get_crypto_candle_minute_past_data():
                         res[asset] = data
             except Exception as error:
                 logger.error("Error: {}".format(error))
-                logger.warn(
-                    "Probably, {} does not exists at the time because it's new currency".format(
-                        asset
-                    )
-                )
+                raise AirflowFailException("API error !!! {}".format(error))
+
+            if curr_size == batch_size:
+                # preprocess
+                candle_data = utils.process_candle_data_from_poloniex(res)
+
+                # insert into cassandra table
+                keyspace = "crypto"
+                table_name = "candles_minute"
+                query = f"""
+                INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
+                    buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """
+                cassandra_operation.insert_data(keyspace, candle_data, query)
+
+                # reset
+                curr_size = 0
+                res = {}
+
             time.sleep(2)
 
         curr_from_time = curr_to_time
@@ -80,44 +99,17 @@ def _get_crypto_candle_minute_past_data():
         if curr_from_time > to_time:
             break
 
-    return res
 
-
-def _process_candle_data(ti):
-    from airflow_modules import utils
-
-    candle_data = ti.xcom_pull(task_ids="get_crypto_candle_minute_past_data")
-    res = utils.process_candle_data_from_poloniex(candle_data)
-
-    return res
-
-
-def _insert_data_to_cassandra(ti):
-    from airflow_modules import cassandra_operation
-
-    keyspace = "crypto"
-    table_name = "candles_minute"
-    candle_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
-
-    query = f"""
-    INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-    """
-
-    cassandra_operation.insert_data(keyspace, candle_data, query)
-
-
-def _load_from_cassandra_to_hive():
+def _insert_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
+    # Delete all from hive
     query = """
     DELETE FROM hive.crypto_raw.candles_minute
     """
-    logger.info("RUN QUERY")
-    logger.info(query)
     trino_operation.run(query)
 
+    # insert into hive from cassandra
     query = """
     INSERT INTO
         hive.crypto_raw.candles_minute (
@@ -168,8 +160,6 @@ def _load_from_cassandra_to_hive():
     FROM
         cassandra.crypto.candles_minute
     """
-    logger.info("RUN QUERY")
-    logger.info(query)
     trino_operation.run(query)
 
 
@@ -192,23 +182,11 @@ with DAG(
     get_crypto_candle_minute_past_data = PythonOperator(
         task_id="get_crypto_candle_minute_past_data",
         python_callable=_get_crypto_candle_minute_past_data,
-        do_xcom_push=True,
     )
 
-    process_candle_data = PythonOperator(
-        task_id="process_candle_data_for_ingestion",
-        python_callable=_process_candle_data,
-        do_xcom_push=True,
-    )
-
-    insert_data_to_cassandra = PythonOperator(
-        task_id="insert_candle_data_to_cassandra",
-        python_callable=_insert_data_to_cassandra,
-    )
-
-    load_from_cassandra_to_hive = PythonOperator(
-        task_id="load_from_cassandra_to_hive",
-        python_callable=_load_from_cassandra_to_hive,
+    insert_from_cassandra_to_hive = PythonOperator(
+        task_id="insert_from_cassandra_to_hive",
+        python_callable=_insert_from_cassandra_to_hive,
     )
 
     dag_end = DummyOperator(task_id="dag_end")
@@ -216,8 +194,6 @@ with DAG(
     (
         dag_start
         >> get_crypto_candle_minute_past_data
-        >> process_candle_data
-        >> insert_data_to_cassandra
-        >> load_from_cassandra_to_hive
+        >> insert_from_cassandra_to_hive
         >> dag_end
     )

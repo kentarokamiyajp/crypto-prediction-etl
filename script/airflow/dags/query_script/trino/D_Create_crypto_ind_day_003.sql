@@ -1,0 +1,1 @@
+DELETE FROM hive.crypto_mart.wrk_crypto_indicator_day

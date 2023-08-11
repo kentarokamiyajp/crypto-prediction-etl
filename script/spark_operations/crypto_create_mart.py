@@ -1,21 +1,34 @@
-import sys
+import os, sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from datetime import datetime
 import pandas as pd
 from stock_indicators import Quote
 from stock_indicators import indicators
+from common import env_variables
 
-
-# Create a SparkSession with Hive support and set the Hive host
+# Create a SparkSession with Hive connection
 spark = (
     SparkSession.builder.appName("PySpark Hive Example")
-    .config("spark.master", "spark://192.168.10.14:7077")
-    .config("spark.hadoop.hive.metastore.uris", "thrift://192.168.10.14:9083")
+    .config(
+        "spark.master",
+        "spark://{}:{}".format(
+            env_variables.SPARK_MASTER_HOST, env_variables.SPARK_MASTER_PORT
+        ),
+    )
+    .config(
+        "spark.hadoop.hive.metastore.uris",
+        "thrift://{}:{}".format(
+            env_variables.HIVE_METASTORE_HOST, env_variables.HIVE_METASTORE_PORT
+        ),
+    )
     .config("spark.debug.maxToStringFields", "100")
     .enableHiveSupport()
     .getOrCreate()
 )
+
 spark.sparkContext.setLogLevel("WARN")
 
 # Get crypto all historical data from hive RAW table

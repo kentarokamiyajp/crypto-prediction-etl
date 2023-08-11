@@ -7,13 +7,26 @@ from pyspark.sql.types import *
 from common import env_variables
 
 """
-Spark Streaming: Kafka Topic -> Cassandra
+Spark Streaming: 
+    Kafka Topic -> Cassandra
+Usage:
+    spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.0.0 cassandra_connection.py 
 """
 
 spark = (
     SparkSession.builder.appName("SparkCassandraApp")
-    .config("spark.master", "spark://192.168.10.14:7077")
-    .config("spark.hadoop.hive.metastore.uris", "thrift://192.168.10.14:9083")
+    .config(
+        "spark.master",
+        "spark://{}:{}".format(
+            env_variables.SPARK_MASTER_HOST, env_variables.SPARK_MASTER_PORT
+        ),
+    )
+    .config(
+        "spark.hadoop.hive.metastore.uris",
+        "thrift://{}:{}".format(
+            env_variables.HIVE_METASTORE_HOST, env_variables.HIVE_METASTORE_PORT
+        ),
+    )
     .config("spark.sql.warehouse.dir", "/user/hive/warehouse")
     .config("spark.cassandra.connection.host", env_variables.CASSANDRA_HOST)
     .config("spark.cassandra.connection.port", env_variables.CASSANDRA_PORT)
