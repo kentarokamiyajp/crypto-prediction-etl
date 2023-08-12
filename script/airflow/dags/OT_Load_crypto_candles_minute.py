@@ -98,6 +98,19 @@ def _get_crypto_candle_minute_past_data():
 
         if curr_from_time > to_time:
             break
+    
+    # Operation for the remaining data.
+    # preprocess
+    candle_data = utils.process_candle_data_from_poloniex(res)
+    # insert into cassandra table
+    keyspace = "crypto"
+    table_name = "candles_minute"
+    query = f"""
+    INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    """
+    cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
 def _insert_from_cassandra_to_hive():
@@ -184,16 +197,23 @@ with DAG(
         python_callable=_get_crypto_candle_minute_past_data,
     )
 
-    insert_from_cassandra_to_hive = PythonOperator(
-        task_id="insert_from_cassandra_to_hive",
-        python_callable=_insert_from_cassandra_to_hive,
-    )
+    # insert_from_cassandra_to_hive = PythonOperator(
+    #     task_id="insert_from_cassandra_to_hive",
+    #     python_callable=_insert_from_cassandra_to_hive,
+    # )
 
     dag_end = DummyOperator(task_id="dag_end")
+
+    # (
+    #     dag_start
+    #     >> get_crypto_candle_minute_past_data
+    #     >> insert_from_cassandra_to_hive
+    #     >> dag_end
+    # )
+
 
     (
         dag_start
         >> get_crypto_candle_minute_past_data
-        >> insert_from_cassandra_to_hive
         >> dag_end
     )

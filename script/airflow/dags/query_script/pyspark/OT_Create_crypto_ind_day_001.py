@@ -31,6 +31,7 @@ spark = (
         "thrift://{}:{}".format(HIVE_METASTORE_HOST, HIVE_METASTORE_PORT),
     )
     .config("spark.debug.maxToStringFields", "100")
+    .config("spark.executor.memory", "10g")
     .enableHiveSupport()
     .getOrCreate()
 )
