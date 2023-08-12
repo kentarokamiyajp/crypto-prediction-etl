@@ -58,7 +58,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Create mart tables for crude oil price indicators",
-    schedule_interval=None,
+    schedule_interval="30 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -233,7 +233,7 @@ with DAG(
 
         create_forex_indicator = SparkSubmitOperator(
             task_id="create_forex_indicator",
-            application="{}/pyspark/D_Create_forex_ind_day_001.py".format(
+            application="{}/pyspark/D_Create_forex_rate_ind_day_001.py".format(
                 airflow_env_variables.QUERY_SCRIPT_HOME
             ),
             conf=spark_conf,
@@ -244,7 +244,7 @@ with DAG(
 
         create_gold_indicator = SparkSubmitOperator(
             task_id="create_gold_indicator",
-            application="{}/pyspark/D_Create_gold_ind_day_001.py".format(
+            application="{}/pyspark/D_Create_gold_price_ind_day_001.py".format(
                 airflow_env_variables.QUERY_SCRIPT_HOME
             ),
             conf=spark_conf,
@@ -255,7 +255,7 @@ with DAG(
 
         create_natural_gas_indicator = SparkSubmitOperator(
             task_id="create_natural_gas_indicator",
-            application="{}/pyspark/D_Create_natural_gas_ind_day_001.py".format(
+            application="{}/pyspark/D_Create_natural_gas_price_ind_day_001.py".format(
                 airflow_env_variables.QUERY_SCRIPT_HOME
             ),
             conf=spark_conf,
@@ -266,7 +266,7 @@ with DAG(
 
         create_stock_index_indicator = SparkSubmitOperator(
             task_id="create_stock_index_indicator",
-            application="{}/pyspark/D_Create_stock_index_ind_day_001.py".format(
+            application="{}/pyspark/D_Create_stock_index_value_ind_day_001.py".format(
                 airflow_env_variables.QUERY_SCRIPT_HOME
             ),
             conf=spark_conf,
