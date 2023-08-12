@@ -9,8 +9,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-dag_id = "D_check_airflow_container_down"
-tags = ["PREP"]
+dag_id = "OT_start_kafka_consumer_crypto_candles_minute"
+tags = ["OT_start"]
 
 
 def _task_failure_alert(context):
@@ -23,8 +23,8 @@ args = {"owner": "airflow", "retries": 0, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
-    description="Check if airflow container is stopped",
-    schedule_interval="10 3 * * 1-5",
+    description="Start kafka consumer for crypto candles minute",
+    schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -39,20 +39,20 @@ with DAG(
     from common import env_variables
 
     ssh_hook = SSHHook(
-        remote_host=env_variables.UBUNTU_HOST,
-        username=env_variables.UBUNTU_USER,
+        remote_host=env_variables.PYTHON_SERVER_HOST,
+        username=env_variables.PYTHON_SERVER_USERNAME,
+        port=env_variables.PYTHON_SERVER_SSH_PORT,
         key_file=env_variables.AIRFLOW_PRIVATE_KEY,
-        port=22,
     )
 
-    ssh_operation = SSHOperator(
-        task_id="ssh_operation",
+    start_kafka_consumer_crypto_candles_minute = SSHOperator(
+        task_id="start_kafka_consumer_crypto_candles_minute",
         ssh_hook=ssh_hook,
-        command=" sh {}/airflow_modules/get_container_status.sh; if [ $? -eq 0 ]; then exit 1; else exit 0; fi ".format(
-            env_variables.UBUNTU_AIRFLOW_DAGS_HOME
+        command=" /home/pyuser/.pyenv/shims/python {}/main_candles_minute.py ".format(
+            env_variables.KAFKA_CONSUMER_HOME
         ),
     )
 
     dag_end = DummyOperator(task_id="dag_end")
 
-    (dag_start >> ssh_operation >> dag_end)
+    (dag_start >> start_kafka_consumer_crypto_candles_minute >> dag_end)
