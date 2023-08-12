@@ -1,8 +1,8 @@
 -- 1. Drop tmp table if exists
-DROP TABLE IF EXISTS $SCHEMA_NAME.${TABLE_NAME}_past_tmp;
+DROP TABLE IF EXISTS $SCHEMA_NAME.${TABLE_NAME}_past_${SYMBOL};
 
 -- 2. Create tmp table
-CREATE EXTERNAL TABLE IF NOT EXISTS $SCHEMA_NAME.${TABLE_NAME}_past_tmp (
+CREATE EXTERNAL TABLE IF NOT EXISTS $SCHEMA_NAME.${TABLE_NAME}_past_${SYMBOL} (
     D_Date string,
     AdjClose string,
     Close string,
@@ -13,11 +13,11 @@ CREATE EXTERNAL TABLE IF NOT EXISTS $SCHEMA_NAME.${TABLE_NAME}_past_tmp (
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
-LOCATION '$HADOOP_HDFS_EXT_DATASET/ext_tables/$SCHEMA_NAME/$TABLE_NAME.db'
+LOCATION '$HADOOP_HDFS_EXT_DATASET/ext_tables/$SCHEMA_NAME/$TABLE_NAME.db/${SYMBOL}'
 TBLPROPERTIES ('skip.header.line.count'='1');
 
 -- 3. Insert data from csv to tmp table.
-LOAD DATA INPATH '$SRC_FILE' INTO TABLE $SCHEMA_NAME.${TABLE_NAME}_past_tmp;
+LOAD DATA INPATH '$SRC_FILE' INTO TABLE $SCHEMA_NAME.${TABLE_NAME}_past_${SYMBOL};
 
 
 -- 3. Insert data from tmp to main table.
@@ -45,5 +45,6 @@ select
     day(TO_DATE(D_Date)) as day,
     0 as hour
 from 
-    $SCHEMA_NAME.${TABLE_NAME}_past_tmp
+    $SCHEMA_NAME.${TABLE_NAME}_past_${SYMBOL}
+where open != ''
 ;

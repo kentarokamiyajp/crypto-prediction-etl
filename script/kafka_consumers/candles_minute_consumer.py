@@ -46,8 +46,11 @@ def _task_failure_alert():
 kafka_conf = {
     "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
     "group.id": "candles-minute-consumer",
-    "auto.offset.reset": "latest",
+    "auto.offset.reset": "earliest",
     "error_cb": _error_cb,
+    "session.timeout.ms":600000,
+    "request.timeout.ms":600000,
+    "max.poll.interval.ms":6000000,
 }
 
 target_topic = "crypto.candles_minute"
