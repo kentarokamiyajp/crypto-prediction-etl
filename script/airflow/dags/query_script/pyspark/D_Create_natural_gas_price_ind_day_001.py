@@ -32,7 +32,9 @@ spark = (
         "spark.hadoop.hive.metastore.uris",
         "thrift://{}:{}".format(HIVE_METASTORE_HOST, HIVE_METASTORE_PORT),
     )
-    .config("spark.executor.memory", "5g")
+    .config("spark.executor.memory", "10g")
+    .config("spark.executor.cores", "2")
+    .config("spark.executor.instances", "1")
     .config("spark.debug.maxToStringFields", "100")
     .enableHiveSupport()
     .getOrCreate()
