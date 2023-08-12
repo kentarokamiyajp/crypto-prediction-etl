@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "OT_start_kafka_producer_crypto_candles_minute"
-tags = ["OT_start"]
+tags = ["onetime", "start"]
 
 
 def _task_failure_alert(context):

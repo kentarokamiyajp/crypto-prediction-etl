@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 dag_id = "D_Create_crypto_indicator_day"
-tags = ["D_Create", "crypto"]
+tags = ["daily", "create", "crypto"]
 
 
 def _task_failure_alert(context):
@@ -93,11 +93,13 @@ with DAG(
     spark_create_indicators = SparkSubmitOperator(
         task_id="create_indicators",
         application="{}/pyspark/D_Create_crypto_ind_day_001.py".format(
-            airflow_env_variables.QUERY_SCRIPT
+            airflow_env_variables.QUERY_SCRIPT_HOME
         ),
         conf={
-            "spark.eventLog.dir": "hdfs://{}:{}/user/spark/applicationHistory".format(
-                env_variables.HISTORY_SERVER_HOST, env_variables.HISTORY_SERVER_POST
+            "spark.eventLog.dir": "hdfs://{}:{}{}".format(
+                env_variables.HISTORY_SERVER_HOST,
+                env_variables.HISTORY_SERVER_POST,
+                env_variables.HISTORY_LOG_HOME,
             ),
             "spark.eventLog.enabled": "true",
         },
@@ -114,7 +116,7 @@ with DAG(
 
     from airflow_modules import airflow_env_variables
 
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
     delete_from_hive_mart_table = PythonOperator(
         task_id="delete_from_hive_mart_table",
         python_callable=_delete_from_hive_mart_table,

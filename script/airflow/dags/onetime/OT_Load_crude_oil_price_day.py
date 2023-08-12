@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "OT_Load_crude_oil_price_day"
-tags = ["OT_Load", "oil"]
+tags = ["onetime", "load", "oil"]
 
 
 def _task_failure_alert(context):

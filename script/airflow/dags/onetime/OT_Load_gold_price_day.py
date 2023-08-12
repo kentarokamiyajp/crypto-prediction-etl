@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "OT_Load_gold_price_day"
-tags = ["OT_Load", "gold"]
+tags = ["onetime", "load", "gold"]
 
 
 def _task_failure_alert(context):

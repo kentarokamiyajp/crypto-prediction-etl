@@ -1,0 +1,1 @@
+DELETE FROM hive.stock_mart.stock_index_indicator_day

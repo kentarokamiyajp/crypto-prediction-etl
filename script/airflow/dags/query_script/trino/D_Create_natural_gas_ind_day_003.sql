@@ -1,0 +1,1 @@
+DELETE FROM hive.gas_mart.wrk_natural_gas_indicator_day

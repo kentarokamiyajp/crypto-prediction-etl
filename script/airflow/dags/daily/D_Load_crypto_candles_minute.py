@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 dag_id = "D_Load_crypto_candles_minute"
-tags = ["D_Load", "crypto"]
+tags = ["daily", "load", "crypto"]
 
 
 def _task_failure_alert(context):
@@ -245,7 +245,7 @@ with DAG(
 
     from airflow_modules import airflow_env_variables
 
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
     delete_days = 3
 

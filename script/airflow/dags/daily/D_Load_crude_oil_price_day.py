@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "D_Load_crude_oil_price_day"
-tags = ["D_Load", "oil"]
+tags = ["daily", "load", "oil"]
 
 
 def _task_failure_alert(context):
@@ -200,7 +200,7 @@ with DAG(
 
     from airflow_modules import airflow_env_variables
 
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
     delete_days = 3
 

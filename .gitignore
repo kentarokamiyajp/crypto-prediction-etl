@@ -1,5 +1,7 @@
 script/*.icloud
 script/airflow/dags/__pycache__/*
+script/airflow/dags/daily/__pycache__/*
+script/airflow/dags/onetime/__pycache__/*
 script/airflow/dags/test*
 script/airflow/dags/airflow_modules/__pycache__/*
 script/airflow/dags/airflow_modules/.env

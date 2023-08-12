@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 dag_id = "OT_Create_crypto_indicator_day"
-tags = ["OT_Create", "crypto"]
+tags = ["onetime", "create", "crypto"]
 
 
 def _task_failure_alert(context):
@@ -29,7 +29,7 @@ def _init_hive_mart_table(query_file):
     trino_operation.run(query)
 
 
-args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
+args = {"owner": "airflow", "retries": 0, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
@@ -51,21 +51,25 @@ with DAG(
     from common import env_variables
     from airflow_modules import airflow_env_variables
 
-    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT)
+    query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
+    query_script = "OT_Create_crypto_ind_day_001"
     init_hive_mart_table = PythonOperator(
         task_id="init_hive_mart_table",
         python_callable=_init_hive_mart_table,
-        op_kwargs={"query_file": f"{query_dir}/OT_Create_crypto_ind_day_001.sql"},
+        op_kwargs={"query_file": f"{query_dir}/{query_script}.sql"},
     )
 
+    spark_script = "OT_Create_crypto_ind_day_001"
     create_crypto_indicators = SparkSubmitOperator(
         task_id="create_crypto_indicators",
-        application="{}/pyspark/OT_Create_crypto_ind_day_001.py".format(
-            airflow_env_variables.QUERY_SCRIPT
+        application="{}/pyspark/{}.py".format(
+            airflow_env_variables.QUERY_SCRIPT_HOME, spark_script
         ),
         conf={
-            "spark.eventLog.dir": "hdfs://{}:{}/user/spark/applicationHistory".format(
-                env_variables.HISTORY_SERVER_HOST, env_variables.HISTORY_SERVER_POST
+            "spark.eventLog.dir": "hdfs://{}:{}{}".format(
+                env_variables.HISTORY_SERVER_HOST,
+                env_variables.HISTORY_SERVER_POST,
+                env_variables.HISTORY_LOG_HOME,
             ),
             "spark.eventLog.enabled": "true",
         },

@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 dag_id = "OT_Load_crypto_candles_minute"
-tags = ["OT_Load", "crypto"]
+tags = ["onetime", "load", "crypto"]
 
 
 def _task_failure_alert(context):
@@ -98,7 +98,7 @@ def _get_crypto_candle_minute_past_data():
 
         if curr_from_time > to_time:
             break
-    
+
     # Operation for the remaining data.
     # preprocess
     candle_data = utils.process_candle_data_from_poloniex(res)
@@ -211,9 +211,4 @@ with DAG(
     #     >> dag_end
     # )
 
-
-    (
-        dag_start
-        >> get_crypto_candle_minute_past_data
-        >> dag_end
-    )
+    (dag_start >> get_crypto_candle_minute_past_data >> dag_end)

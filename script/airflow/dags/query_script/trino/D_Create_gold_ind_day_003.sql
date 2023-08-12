@@ -1,0 +1,1 @@
+DELETE FROM hive.gold_mart.wrk_gold_indicator_day

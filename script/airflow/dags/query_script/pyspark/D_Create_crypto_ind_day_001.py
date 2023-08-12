@@ -1,4 +1,4 @@
-import sys
+import sys,os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.sql.types import *
@@ -23,7 +23,7 @@ update_N_months_from = int(sys.argv[6])
 # Create a SparkSession with Hive connection
 #############################################
 spark = (
-    SparkSession.builder.appName("PySpark Hive Session {}".format(ts_now))
+    SparkSession.builder.appName("{} PySpark Hive Session for {}".format(ts_now, os.path.basename(__file__)))
     .config(
         "spark.master",
         "spark://{}:{}".format(SPARK_MASTER_HOST, SPARK_MASTER_PORT),
@@ -32,7 +32,7 @@ spark = (
         "spark.hadoop.hive.metastore.uris",
         "thrift://{}:{}".format(HIVE_METASTORE_HOST, HIVE_METASTORE_PORT),
     )
-    .config("spark.executor.memory", "10g")
+    .config("spark.executor.memory", "5g")
     .config("spark.debug.maxToStringFields", "100")
     .enableHiveSupport()
     .getOrCreate()

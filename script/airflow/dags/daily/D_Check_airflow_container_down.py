@@ -9,8 +9,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-dag_id = "D_check_airflow_container_down"
-tags = ["PREP"]
+dag_id = "D_Check_airflow_container_down"
+tags = ["PREP", "daily"]
 
 
 def _task_failure_alert(context):

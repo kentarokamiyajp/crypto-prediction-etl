@@ -1,4 +1,4 @@
-import sys
+import sys,os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.sql.types import *
@@ -21,7 +21,7 @@ HIVE_METASTORE_PORT = sys.argv[4]
 # Create a SparkSession with Hive connection
 #############################################
 spark = (
-    SparkSession.builder.appName("PySpark Hive Session {}".format(ts_now))
+    SparkSession.builder.appName("{} PySpark Hive Session for {}".format(ts_now, os.path.basename(__file__)))
     .config(
         "spark.master",
         "spark://{}:{}".format(SPARK_MASTER_HOST, SPARK_MASTER_PORT),
