@@ -4,6 +4,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ def _get_crypto_candle_minute_past_data():
                         res[asset] = data
             except Exception as error:
                 logger.error("Error: {}".format(error))
+                logger.error(traceback.format_exc())
                 raise AirflowFailException("API error !!! {}".format(error))
 
             if curr_size == batch_size:

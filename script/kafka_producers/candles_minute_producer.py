@@ -7,13 +7,14 @@ import time
 from datetime import datetime, date
 import logging
 import random
-from poloniex_apis import get_request
+from poloniex_apis import rest_api
 from common import env_variables, utils
 import pytz
+import traceback
 
 jst = pytz.timezone("Asia/Tokyo")
 
-polo_operator = get_request.PoloniexOperator()
+polo_operator = rest_api.PoloniexOperator()
 
 ###################
 # Set logging env #
@@ -22,13 +23,14 @@ polo_operator = get_request.PoloniexOperator()
 args = sys.argv
 curr_date = args[1]
 curr_timestamp = args[2]
+producer_id = args[3]
 print(curr_date, curr_timestamp)
 
 logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
 logging.basicConfig(
     format="%(asctime)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    filename=f"{logdir}/candles_minute_producer_{curr_timestamp}.log",
+    filename=f"{logdir}/{producer_id}_{curr_timestamp}.log",
     filemode="w",
 )
 
@@ -130,9 +132,10 @@ def main():
                     retry_count += 1
                     logger.warning(f"API ERROR: Could not get candle data ({error})")
                     logger.warning(f"Retry Requst: {retry_count}")
+                    logger.warning(traceback.format_exc())
                     if retry_count == max_retry_count:
                         ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-                        message = f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (exceeeded max retry count)"
+                        message = f"{ts_now} [Failed] Kafka producer: {producer_id}.py (exceeeded max retry count)"
                         _task_failure_alert(message)
                         sys.exit(1)
                     time.sleep(600)
@@ -173,10 +176,11 @@ def main():
     except Exception as error:
         ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
         message = (
-            f"{ts_now} [Failed] Kafka producer: candles_minute_producer.py (unknow error)"
+            f"{ts_now} [Failed] Kafka producer: {producer_id}.py (unknown error)"
         )
         _task_failure_alert(message)
         logger.error(f"An exception occurred: {error}")
+        logger.error(traceback.format_exc())
 
 
 if __name__ == "__main__":

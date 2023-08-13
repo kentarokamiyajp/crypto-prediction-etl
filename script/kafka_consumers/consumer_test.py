@@ -47,34 +47,20 @@ def _task_failure_alert():
 
 kafka_conf = {
     "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
-    "group.id": "candles-minute-consumer",
-    "auto.offset.reset": "earliest",
+    "group.id": "consumer-group-test",
+    "auto.offset.reset": "latest",
     "error_cb": _error_cb,
     "session.timeout.ms":600000,
     "max.poll.interval.ms":6000000,
 }
 
-target_topic = "crypto.candles_minute"
+target_topic = "crypto.order_book"
 
 # set a producer
 c = Consumer(kafka_conf)
 logger.info("Kafka Consumer has been initiated...")
 c.subscribe([target_topic])
-
-
-##########################
-# Set Cassandra Operator #
-##########################
-keyspace = "crypto"
-table_name = "candles_minute_realtime"
-cass_ope = cassandra_operator.Operator(keyspace)
-
-insert_query = f"""
-INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-    buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
-    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-"""
-
+logger.info("Kafka Consumer is established !!!")
 
 def main():
     while True:
@@ -89,28 +75,37 @@ def main():
 
             batch_data = []
             for d in data["data"]:
-                batch_data.append(
-                    [
-                        d["id"],
-                        float(d["low"]),
-                        float(d["high"]),
-                        float(d["open"]),
-                        float(d["close"]),
-                        float(d["amount"]),
-                        float(d["quantity"]),
-                        float(d["buyTakerAmount"]),
-                        float(d["buyTakerQuantity"]),
-                        int(d["tradeCount"]),
-                        int(d["ts"]),
-                        float(d["weightedAverage"]),
-                        d["interval"],
-                        int(d["startTime"]),
-                        int(d["closeTime"]),
-                        d["dt"],
-                        datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
-                    ]
-                )
-            cass_ope.insert_batch_data(insert_query, batch_data)
+                id = d["id"]
+                seqid = int(d["seqid"])
+                createTime = d["createTime"]
+                ts_send = int(d["ts_send"])
+                asks = d["asks"]
+                bids = d["bids"]
+                
+                for order_type, orders in [['ask',asks],['bid',bids]]:
+                    for i, order in enumerate(orders):
+                        quote_price = float(order[0])
+                        base_amount = float(order[1])
+                        
+                        # Rank of the order in order book. 
+                        # From '1' to '20' (since websocket API can only get top 20 orders as of 2023-08-13)
+                        order_rank = i+1
+                        
+                        batch_data.append(
+                            [
+                                id,
+                                seqid,
+                                order_type,
+                                quote_price,
+                                base_amount,
+                                order_rank,
+                                createTime,
+                                ts_send,
+                                datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                                datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                            ]
+                        )
+
         except Exception as error:
             logger.error("Kafka producer failed !!!")
             logger.error("Error:".format(error))

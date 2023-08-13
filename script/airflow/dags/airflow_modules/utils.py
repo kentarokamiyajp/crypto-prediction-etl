@@ -6,6 +6,7 @@ from datetime import datetime, timezone, date
 import pandas_market_calendars as mcal
 import pytz
 import airflow_env_variables
+import traceback
 
 sys.path.append(airflow_env_variables.DWH_SCRIPT)
 from common.utils import send_line_message
@@ -70,6 +71,7 @@ def process_candle_data_from_poloniex(data):
                 )
             except Exception as error:
                 print("Error:".format(error))
+                print(traceback.format_exc())
                 print("asset_data ==>> \n", asset_data)
                 sys.exit(1)
     return batch_data
@@ -105,6 +107,7 @@ def process_yahoofinancials_data(data):
                     print("WARN: None data is containing: ", p)
             except Exception as error:
                 print("Error:".format(error))
+                print(traceback.format_exc())
                 print("data ==>> \n", p)
                 sys.exit(1)
     return batch_data
