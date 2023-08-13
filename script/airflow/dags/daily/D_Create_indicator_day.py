@@ -58,7 +58,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Create mart tables for crude oil price indicators",
-    schedule_interval="30 1 * * *",
+    schedule_interval="5 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -75,8 +75,8 @@ with DAG(
     _allowed_states = ["success"]
     _failed_states = ["failed", "skipped"]
     _check_existence = True
-    _poke_interval = 60
-    _execution_delta = timedelta(minutes=30)
+    _poke_interval = 10
+    _execution_delta = timedelta(minutes=5)
     _mode = "reschedule"
     _timeout = 1800
 
