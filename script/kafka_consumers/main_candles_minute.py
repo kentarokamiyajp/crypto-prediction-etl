@@ -6,7 +6,7 @@ import subprocess
 import pytz
 from common import env_variables
 
-base_dir = env_variables.KAFKA_PRODUCER_HOME
+base_dir = env_variables.KAFKA_CONSUMER_HOME
 
 jst = pytz.timezone("Asia/Tokyo")
 ts_now = datetime.datetime.now(jst)
@@ -18,9 +18,11 @@ isExist = os.path.exists(logdir)
 if not isExist:
     os.makedirs(logdir)
 
+consumer_id = "candles_minute_consumer"
+
 subprocess.call(
-    f"""nohup python {base_dir}/candles_minute_producer.py "{curr_date}" "{curr_timestamp}" > \
-                    {logdir}/nohup_out_kafka_candles_minute_producer_{curr_timestamp}.log \
-                    2> {logdir}/nohup_error_kafka_candles_minute_producer_{curr_timestamp}.log &""",
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{curr_timestamp}.log &""",
     shell=True,
 )

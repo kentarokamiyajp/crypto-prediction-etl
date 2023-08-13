@@ -18,9 +18,11 @@ isExist = os.path.exists(logdir)
 if not isExist:
     os.makedirs(logdir)
 
+consumer_id = "order_book_consumer"
+
 subprocess.call(
-    f"""nohup python {base_dir}/candles_minute_consumer.py "{curr_date}" "{curr_timestamp}" > \
-                    {logdir}/nohup_out_kafka_candles_minute_consumer_{curr_timestamp}.log \
-                    2> {logdir}/nohup_error_kafka_candles_minute_consumer_{curr_timestamp}.log &""",
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{curr_timestamp}.log &""",
     shell=True,
 )

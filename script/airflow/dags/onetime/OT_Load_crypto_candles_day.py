@@ -3,6 +3,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime, timedelta
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ def _get_crypto_candle_day_past_data():
                         res[asset] = data
             except Exception as error:
                 logger.error("Error: {}".format(error))
+                logger.error(traceback.format_exc())
                 logger.warn(
                     "Probably, {} does not exists at the time because it's new currency".format(
                         asset

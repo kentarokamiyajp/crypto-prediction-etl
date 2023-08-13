@@ -3,6 +3,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.exceptions import AirflowFailException
 from datetime import datetime, timedelta, date
+import traceback
 import logging
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ def _get_candle_data():
                     break
                 except Exception as error:
                     logger.error("Error: {}".format(error))
+                    logger.error(traceback.format_exc())
                     curr_retry_cnt += 1
                     time.sleep(600)
 
