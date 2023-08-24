@@ -9,6 +9,7 @@ from common import env_variables, utils
 from cassandra_operations import cassandra_operator
 import pytz
 import traceback
+import time
 
 jst = pytz.timezone("Asia/Tokyo")
 
@@ -77,6 +78,10 @@ INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,
 
 
 def main():
+    max_retry_cnt = 5
+    curr_retry_cnt = 0
+    sleep_time = 600
+    
     while True:
         try:
             msg = c.poll(10.0)
@@ -111,13 +116,22 @@ def main():
                     ]
                 )
             cass_ope.insert_batch_data(insert_query, batch_data)
+            curr_retry_cnt = 0
+            
         except Exception as error:
-            logger.error("Kafka producer failed !!!")
-            logger.error("Error:".format(error))
-            logger.error(traceback.format_exc())
-            _task_failure_alert()
-            c.close()
-            sys.exit(1)
+            curr_retry_cnt+=1
+            if curr_retry_cnt > max_retry_cnt:
+                logger.error("Kafka producer failed !!!")
+                logger.error("Error:".format(error))
+                logger.error(traceback.format_exc())
+                _task_failure_alert()
+                c.close()
+                sys.exit(1)
+            else:
+                logger.error("Kafka producer failed !!! Retry ({}/{})".format(curr_retry_cnt,max_retry_cnt))
+                logger.error("Error:".format(error))
+                logger.error(traceback.format_exc())
+            time.sleep(sleep_time)
 
 
 if __name__ == "__main__":

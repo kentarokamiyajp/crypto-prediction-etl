@@ -20,9 +20,98 @@ if not isExist:
 
 consumer_id = "order_book_consumer"
 
-subprocess.call(
-    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" > \
-                    {logdir}/nohup_out_kafka_{consumer_id}_{curr_timestamp}.log \
-                    2> {logdir}/nohup_error_kafka_{consumer_id}_{curr_timestamp}.log &""",
+symbol = "ADA_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+symbol = "BCH_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "BNB_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "BTC_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "DOGE_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "ETH_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "LTC_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "MKR_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "SHIB_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+
+symbol = "TRX_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
+    shell=True,
+)
+
+symbol = "XRP_USDT"
+subprocess.Popen(
+    f"""nohup python {base_dir}/{consumer_id}.py "{curr_date}" "{curr_timestamp}" "{consumer_id}" "{symbol}" > \
+                    {logdir}/nohup_out_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log \
+                    2> {logdir}/nohup_error_kafka_{consumer_id}_{symbol}_{curr_timestamp}.log &""",
     shell=True,
 )

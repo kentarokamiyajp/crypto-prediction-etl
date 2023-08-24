@@ -16,6 +16,18 @@ jst = pytz.timezone("Asia/Tokyo")
 
 polo_operator = websocket_api.PoloniexOperator()
 
+symbols = ["ADA_USDT",
+            "BCH_USDT",
+            "BNB_USDT",
+            "BTC_USDT",
+            "DOGE_USDT",
+            "ETH_USDT",
+            "LTC_USDT",
+            "MKR_USDT",
+            "SHIB_USDT",
+            "TRX_USDT",
+            "XRP_USDT"]
+
 ###################
 # Set logging env #
 ###################
@@ -47,19 +59,25 @@ kafka_conf = {"bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS}
 admin_client = admin.AdminClient(kafka_conf)
 
 # Define the topic configuration
-target_topic = "crypto.order_book"
 num_partitions = 3
 replication_factor = 2
 
-# Create a NewTopic object
-new_topic = admin.NewTopic(
-    topic=target_topic,
-    num_partitions=num_partitions,
-    replication_factor=replication_factor,
-)
+target_topics = []
+base_topic_name = "crypto.order_book"
+for symbol in symbols:
+    topic_name = base_topic_name+"_"+symbol
 
-# Create the topic using the AdminClient
-admin_client.create_topics([new_topic])
+    # Create a NewTopic object
+    new_topic = admin.NewTopic(
+        topic=topic_name,
+        num_partitions=num_partitions,
+        replication_factor=replication_factor,
+    )
+    
+    target_topics.append(new_topic)
+
+# Create the topic using the AdminClient    
+admin_client.create_topics(target_topics)
 
 # set a producer
 p = Producer(kafka_conf)
@@ -91,7 +109,7 @@ def _task_failure_alert(message):
     utils.send_line_message(message)
 
 
-def send_to_kafka_topic(raw_data):
+def send_to_kafka_topic(one_response):
     order_data = {
         "data": [
             {
@@ -102,13 +120,14 @@ def send_to_kafka_topic(raw_data):
                 "seqid": data["id"],# id of the record (SeqId)
                 "ts_send": _unix_time_millisecond_to_second(data["ts"]),# send timestamp
             }
-            for data in raw_data["data"]
+            for data in one_response["data"]
         ]
     }
 
+    symbol = order_data["data"][0]["id"]
     m = json.dumps(order_data)
     p.produce(
-        target_topic,
+        base_topic_name+"_"+symbol,
         value=m.encode("utf-8"),
         partition=random.randint(0, num_partitions - 1),
         callback=_receipt,
@@ -119,21 +138,10 @@ def send_to_kafka_topic(raw_data):
 # Main #
 ########
 def main():
-    
     data_to_send = {
         "event": "subscribe", # event type: ping, pong, subscribe, unsubscribe, unsubscribe_all, list_subscriptions
         "channel": ["book"],
-        "symbols": ["ADA_USDT",
-                    "BCH_USDT",
-                    "BNB_USDT",
-                    "BTC_USDT",
-                    "DOGE_USDT",
-                    "ETH_USDT",
-                    "LTC_USDT",
-                    "MKR_USDT",
-                    "SHIB_USDT",
-                    "TRX_USDT",
-                    "XRP_USDT"],
+        "symbols": symbols,
         "depth": 20
         }
     

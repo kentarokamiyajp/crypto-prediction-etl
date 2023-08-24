@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS crypto.order_book_realtime (
     ts_send bigint,
     dt_insert_utc date,
     ts_insert_utc timestamp,
-    PRIMARY KEY ((id, dt_insert_utc, order_type), seqid, order_rank)
+    PRIMARY KEY ((id, dt_insert_utc, order_type, seqid), order_rank)
 );
