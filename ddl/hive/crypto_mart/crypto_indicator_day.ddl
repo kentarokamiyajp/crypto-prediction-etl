@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS crypto_mart.crypto_indicator_day (
     high float COMMENT 'highest price',
     open float COMMENT 'price at the start time',
     close float COMMENT 'price at the end time',
+    volume float COMMENT 'volume of the day',
     macd float COMMENT 'The MACD line is the difference between slow and fast moving averages (macd = fast_ema - slow_ema)',
     macd_single float COMMENT 'Moving average of the macd line',
     rsi float COMMENT 'Relative Strength Index (RSI)',
