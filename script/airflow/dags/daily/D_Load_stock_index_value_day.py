@@ -28,32 +28,32 @@ def _get_stock_index_value():
     import time
 
     tickers = [
-        "^NDX",
-        "^DJI",
-        "^DJT",
-        "^DJU",
-        "^BANK",
-        "^IXCO",
-        "^NBI",
-        "^NDXT",
-        "^INDS",
-        "^INSR",
-        "^OFIN",
-        "^IXTC",
-        "^TRAN",
-        "^NYY",
-        "^NYI",
-        "^NY",
-        "^NYL",
-        "^XMI",
-        "^OEX",
-        "^GSPC",
-        "^HSI",
-        "^FCHI",
-        "^BVSP",
-        "^N225",
-        "^RUA",
-        "^XAX",
+        "^NDX", # NASDAQ 100
+        "^DJI", # Dow Jones Industrial Average
+        "^DJT", # Dow Jones Transportation Averag
+        "^DJU", # Dow Jones Utility Average
+        "^BANK", # NASDAQ Bank
+        "^IXCO", # NASDAQ Computer
+        "^NBI", # NASDAQ Biotechnology
+        "^NDXT", # NASDAQ 100 Technology Sector
+        "^INDS", # NASDAQ Industrial
+        "^INSR", # NASDAQ Insurance
+        "^OFIN", # NASDAQ Other Finance
+        "^IXTC", # NASDAQ Telecommunications
+        "^TRAN", # NASDAQ Transportation
+        "^NYY", # NYSE TMT INDEX
+        "^NYI", # NYSE INTL 100 INDEX
+        "^NY", # NYSE U.S. 100 Index
+        "^NYL", # NYSE WORLD LEADERS INDEX
+        "^XMI", # NYSE ARCA MAJOR MARKET INDEX
+        "^OEX", # S&P 100 INDEX
+        "^GSPC", # S&P 500
+        "^HSI", # HANG SENG INDEX
+        "^FCHI", # CAC 40
+        "^BVSP", # IBOVESPA
+        "^N225", # Nikkei 225
+        "^RUA", # Russell 3000
+        "^XAX", # NYSE AMEX COMPOSITE INDEX
     ]
 
     interval = "daily"

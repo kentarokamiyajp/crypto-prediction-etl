@@ -271,6 +271,7 @@ insert_data = final_results.select(
     col("high"),
     col("open"),
     col("close"),
+    col("volume"),
     col("macd"),
     col("macd_single"),
     col("rsi"),

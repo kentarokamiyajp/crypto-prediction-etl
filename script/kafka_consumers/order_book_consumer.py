@@ -9,22 +9,25 @@ from common import env_variables, utils
 from cassandra_operations import cassandra_operator
 import pytz
 import traceback
+import time
 
 jst = pytz.timezone("Asia/Tokyo")
 
-###################
-# Set logging env #
-###################
 
 args = sys.argv
 curr_date = args[1]
 curr_timestamp = args[2]
 consumer_id = args[3]
+symbol = args[4]
+
+###################
+# Set logging env #
+###################
 logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
 logging.basicConfig(
     format="%(asctime)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    filename=f"{logdir}/{consumer_id}_{curr_timestamp}.log",
+    filename=f"{logdir}/{consumer_id}_{symbol}_{curr_timestamp}.log",
     filemode="w",
 )
 
@@ -41,20 +44,20 @@ def _error_cb(error):
 
 def _task_failure_alert():
     ts_now = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
-    message = f"{ts_now} [Failed] Kafka consumer: {consumer_id}.py"
+    message = f"{ts_now} [Failed] Kafka consumer: {consumer_id}.py ({symbol})"
     utils.send_line_message(message)
 
 
 kafka_conf = {
     "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
-    "group.id": "order-book-consumer",
+    "group.id": f"order-book-consumer-{symbol}",
     "auto.offset.reset": "earliest",
     "error_cb": _error_cb,
     "session.timeout.ms":600000,
     "max.poll.interval.ms":6000000,
 }
 
-target_topic = "crypto.order_book"
+target_topic = f"crypto.order_book_{symbol}"
 
 # set a producer
 c = Consumer(kafka_conf)
@@ -78,6 +81,10 @@ INSERT INTO {table_name} (id,seqid,order_type,quote_price,base_amount,order_rank
 
 
 def main():
+    max_retry_cnt = 5
+    curr_retry_cnt = 0
+    sleep_time = 600
+    
     while True:
         try:
             msg = c.poll(10.0)
@@ -88,7 +95,6 @@ def main():
                 continue
             data = json.loads(msg.value().decode("utf-8"))
 
-            batch_data = []
             for d in data["data"]:
                 id = d["id"]
                 seqid = int(d["seqid"])
@@ -98,6 +104,7 @@ def main():
                 bids = d["bids"]
                 
                 for order_type, orders in [['ask',asks],['bid',bids]]:
+                    batch_data = []
                     for i, order in enumerate(orders):
                         quote_price = float(order[0])
                         base_amount = float(order[1])
@@ -120,16 +127,23 @@ def main():
                                 datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
                             ]
                         )
-            cass_ope.insert_batch_data(insert_query, batch_data)
+                    cass_ope.insert_batch_data(insert_query, batch_data)
+                    curr_retry_cnt = 0
 
         except Exception as error:
-            logger.error("Kafka producer failed !!!")
-            logger.error("Error:".format(error))
-            logger.error(traceback.format_exc())
-            _task_failure_alert()
-            c.close()
-            sys.exit(1)
-
+            curr_retry_cnt+=1
+            if curr_retry_cnt > max_retry_cnt:
+                logger.error("Kafka producer failed !!!")
+                logger.error("Error:".format(error))
+                logger.error(traceback.format_exc())
+                _task_failure_alert()
+                c.close()
+                sys.exit(1)
+            else:
+                logger.error("Kafka producer failed !!! Retry ({}/{})".format(curr_retry_cnt,max_retry_cnt))
+                logger.error("Error:".format(error))
+                logger.error(traceback.format_exc())
+            time.sleep(sleep_time)
 
 if __name__ == "__main__":
     main()
