@@ -14,3 +14,5 @@ script/common/default_conf.sh
 script/common/__pycache__/*
 script/local_executions/*
 script/manual_operations/*
+script/kafka_producers/__pycache__/*
+script/kafka_consumers/__pycache__/*
