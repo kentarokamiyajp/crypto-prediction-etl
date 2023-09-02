@@ -1,0 +1,12 @@
+# Producer config
+NUM_PARTITIONS=3
+REPLICATION_FOCTOR=1
+RETENTION_DAYS=3
+TOPIC_ID="crypto.order_book"
+
+# Target symbols
+SYMBOLS="BTC_USDT,ETH_USDT"
+DEPTH=20
+
+# Set max retry count for websocket function
+RETRY_COUNT=5

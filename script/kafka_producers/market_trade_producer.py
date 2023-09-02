@@ -24,25 +24,31 @@ def _unix_time_millisecond_to_second(unix_time):
 
 
 def process_websocket_response(response):
-    order_data = {
+    trade_data = {
         "data": [
             {
                 "id": data["symbol"],  # symbol name
+                "trade_id": data["id"],  # trade id
                 "createTime": _unix_time_millisecond_to_second(
                     data["createTime"]
                 ),  # time the record was created
-                "asks": data["asks"],  # sell orders, in ascending order of price
-                "bids": data["bids"],  # buy orders, in descending order of price
-                "seqid": data["id"],  # id of the record (SeqId)
+                "amount": data[
+                    "amount"
+                ],  # e.g., amount (total price of the traded BTC coins) of USD$, amount = quantity*price
+                "quantity": data["quantity"],  # e.g., number of the traded BTC coins
+                "takerSide": data["takerSide"],  # "buy" or "sell"
+                "price": data["price"],  # e.g., USD Price for 1 BTC coin
                 "ts_send": _unix_time_millisecond_to_second(data["ts"]),  # send timestamp
             }
             for data in response["data"]
         ]
     }
-    return order_data
+    return trade_data
 
 
-def _start_procedure(producer_id, connection_type, request_data, send_kafka, kafka_config):
+def _start_procedure(
+    producer_id, connection_type, request_data, send_kafka, kafka_config
+):
     polo_ws_operator = websocket_api.PoloniexSocketOperator(
         connection_type, request_data, send_kafka, kafka_config
     )
@@ -55,7 +61,7 @@ def _start_procedure(producer_id, connection_type, request_data, send_kafka, kaf
                 polo_ws_operator.run_forever()
             except Exception as error:
                 polo_ws_operator.kafka_producer.logger.warning(
-                    f"API ERROR: Could not get order book data ({error})"
+                    f"API ERROR: Could not get market trade data ({error})"
                 )
                 polo_ws_operator.kafka_producer.logger.warning(
                     f"Retry Request: {retry_count}"
@@ -88,14 +94,12 @@ def main():
     num_partitions = os.environ.get("NUM_PARTITIONS")
     topic_id = os.environ.get("TOPIC_ID")
     symbols = os.environ.get("SYMBOLS").split(",")
-    depth = int(os.environ.get("DEPTH"))
 
     for symbol in symbols:
         subscribe_payload = {
             "event": "subscribe",
-            "channel": ["book"],
+            "channel": ["trades"],
             "symbols": [symbol],
-            "depth": depth,
         }
 
         ping_payload = {"event": "ping"}

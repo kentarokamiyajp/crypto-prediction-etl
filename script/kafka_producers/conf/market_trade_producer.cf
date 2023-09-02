@@ -1,0 +1,11 @@
+# Producer config
+NUM_PARTITIONS=3
+REPLICATION_FOCTOR=1
+RETENTION_DAYS=3
+TOPIC_ID="crypto.market_trade"
+
+# Target symbols
+SYMBOLS="BTC_USDT,ETH_USDT"
+
+# Set max retry count for websocket function
+RETRY_COUNT=5

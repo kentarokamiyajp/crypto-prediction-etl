@@ -1,99 +1,68 @@
-import asyncio
+import os, sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import websocket
 import json
-import websockets
+import traceback
+from kafka_producers.producer_operation import KafkaProducer
 
-"""Poloniex Websocket API
-A single IP is limited to 2000 simultaneous connections on each of the public and private channels.
-Once a connection has been established, each connection is limited to 500 requests per second.
-
-Subscription usege:
-    data_to_send = {
-        "event": "subscribe",
-        "channel": ["<channel>"],
-        "symbols": [
-            "<symbol1>",
-            "<symbol2>",
-            "<symbol3>"
-        ]
-    }
-    
-Multiple channel subscription:
-    data_to_send = {
-        "event": "subscribe",
-        "channel": ["orders","balances"],
-        "symbols": ["all"]
-    }
-"""
-
-class PoloniexOperator:
-    def __init__(self):
-        self.public_uri = "wss://ws.poloniex.com/ws/public"
-        self.private_uri = "wss://ws.poloniex.com/ws/private"
+class PoloniexSocketOperator:
+    def __init__(self, connection_type: str, request_data: dict, send_kafka: bool, kafka_config: dict):
+        # #Display debug log
+        # websocket.enableTrace(True)
         
-    def default_process_data_for_kafka(self, data):
-        return data
+        public_uri = "wss://ws.poloniex.com/ws/public"
+        private_uri = "wss://ws.poloniex.com/ws/private"
         
-    async def send_request(self, data_to_send, request_interval, transfer_to_kafka=False, send_to_kafka_topic=None):
+        def on_open(wsapp):
+            """
+            Do something when connection is established.
+            """
+            wsapp.send(request_data["subscribe_payload"])
+            
+        def on_message(wsapp, message):
+            """
+            Do something when getting a message from a server.
+            """
+            if "pong" not in message:
+                # Send ping to keep connection live
+                wsapp.send(request_data["ping_payload"])
+                
+                if "data" in message:
+                    self._send_message_to_kafka(json.loads(message))
+            
+        def on_pong(wsapp, message):
+            """
+            Do something when getting a pong (response for a ping from client) from a server.
+            """
+            # print("Got a pong! No need to respond")
+            pass
         
-        if transfer_to_kafka == True and send_to_kafka_topic == None:
-            print("ERROR: 'send_to_kafka_topic' function is not defined !!!")
+        try:
+            if connection_type == "public":
+                self.wsapp = websocket.WebSocketApp(public_uri, on_message=on_message, on_pong=on_pong, on_open=on_open)
+            else:
+                self.wsapp = websocket.WebSocketApp(private_uri, on_message=on_message, on_pong=on_pong, on_open=on_open)
+        except:
+            traceback.format_exc()
             sys.exit(1)
-        
-        max_retry_count = 5
-        curr_retry_count = 0
-        while curr_retry_count <= max_retry_count:
-            try:
-                async with websockets.connect(self.public_uri, ping_interval=None) as websocket:
-                    while True:
-                        await websocket.send(json.dumps(data_to_send))
-                        response = await websocket.recv()
-                        
-                        """response example
-                        {"channel":"book","data":[{"symbol":"SHIB_USDT","createTime":1691907592627,"asks":[["0.000010583","240836"],["0.000010584","28068200"],["0.000010585","93619849"],["0.00001059","11098962"],["0.000010594","943930526"],["0.000010596","149582654"],["0.000010599","277246085"],["0.000010605","277246085"],["0.000010619","94170826"],["0.000010625","30000000"],["0.000010629","924551037"],["0.000010655","924551037"],["0.000010665","4278194171"],["0.000010725","374681163"],["0.000010766","500000"],["0.00001077","500000"],["0.000010772","500000"],["0.000010795","500000"],["0.000010805","1000000"],["0.00001081","184469988"]],"bids":[["0.000010582","6899684"],["0.000010571","975078449"],["0.00001057","290941531"],["0.000010564","500000"],["0.000010563","93619849"],["0.000010561","94782"],["0.000010558","149582654"],["0.000010552","277246085"],["0.00001055","94881"],["0.000010546","277246085"],["0.000010545","30000000"],["0.000010542","94858661"],["0.000010535","2327532252"],["0.000010534","924551037"],["0.000010507","475873"],["0.000010506","924551037"],["0.0000105","95333"],["0.000010496","4808708"],["0.000010495","3603556991"],["0.000010478","374681163"]],"id":133790392,"ts":1691907592696}]}
-                        
-                        symbol	String	symbol name
-                        createTime	Long	time the record was created
-                        asks	List<String>	sell orders, in ascending order of price
-                        bids	List<String>	buy orders, in descending order of price
-                        id	Long	id of the record (SeqId)
-                        ts	Long	send timestamp
-                        """
-                        
-                        if transfer_to_kafka and "data" in response:
-                            send_to_kafka_topic(json.loads(response))
-                            
-                        await asyncio.sleep(request_interval)
-                        curr_retry_count = 0 # reset
-                        
-            except websockets.ConnectionClosed as e:
-                print(f"Connection closed with code {e.code}. Reconnecting...")
-                await asyncio.sleep(5)
-                curr_retry_count+=1
+            
+        if send_kafka:
+            self.curr_date = kafka_config["curr_date"]
+            self.curr_timestamp = kafka_config["curr_timestamp"]
+            self.producer_id = kafka_config["producer_id"]
+            self.topic_id = kafka_config["topic_id"]
+            self.num_partitions = kafka_config["num_partitions"]
+            self.func_process_response = kafka_config["func_process_response"]
+            
+            self.kafka_producer = KafkaProducer(self.curr_date, self.curr_timestamp, self.producer_id)
 
-    def main_send_request(self, data_to_send, request_interval, transfer_to_kafka=False, send_to_kafka_topic=None):
-        asyncio.get_event_loop().run_until_complete(self.send_request(data_to_send, request_interval, transfer_to_kafka, send_to_kafka_topic))
-    
-    
-if __name__=="__main__":
-    ws = PoloniexOperator()
-    
-    data_to_send = {
-        "event": "subscribe", # event type: ping, pong, subscribe, unsubscribe, unsubscribe_all, list_subscriptions
-        "channel": ["book"],
-        "symbols": ["ADA_USDT",
-                    "BCH_USDT",
-                    "BNB_USDT",
-                    "BTC_USDT",
-                    "DOGE_USDT",
-                    "ETH_USDT",
-                    "LTC_USDT",
-                    "MKR_USDT",
-                    "SHIB_USDT",
-                    "TRX_USDT",
-                    "XRP_USDT"],
-        "depth": 20
-        }
-    
-    request_interval = 1
-    
-    ws.main_send_request(data_to_send, request_interval)
+    def run_forever(self):
+        self.wsapp.run_forever(reconnect=1) 
+        
+    def _send_message_to_kafka(self, response):
+        message = self.func_process_response(response)
+        self.kafka_producer.produce_message(
+            self.topic_id, json.dumps(message), int(self.num_partitions)
+        )
+        self.kafka_producer.poll_message(timeout=10)
