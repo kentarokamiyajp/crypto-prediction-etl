@@ -157,7 +157,7 @@ def _check_latest_dt():
         _send_warning_notification(warning_message)
 
 
-def _delete_past_data_from_hive(query_file, delete_days):
+def _delete_past_data_from_hive(query_file, days_delete_from):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
@@ -169,20 +169,20 @@ def _delete_past_data_from_hive(query_file, delete_days):
     However, to delete data in a certain period such as deleting from N days ago,
     need to repeat a delete query N times.
     """
-    for N in range(0, delete_days + 1):
+    for N in range(0, days_delete_from + 1):
         query = query_script.replace("${N}", str(-N))
         logger.info("RUN QUERY")
         logger.info(query)
         trino_operation.run(query)
 
 
-def _hive_deletion_check(query_file, delete_days):
+def _hive_deletion_check(query_file, days_delete_from):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
         query = f.read()
 
-    query = query.replace("${N}", str(-delete_days))
+    query = query.replace("${N}", str(-days_delete_from))
     logger.info("RUN QUERY")
     logger.info(query)
     res = trino_operation.run(query)
@@ -195,13 +195,13 @@ def _hive_deletion_check(query_file, delete_days):
         raise AirflowFailException(error_msg)
 
 
-def _load_from_cassandra_to_hive(query_file, delete_days):
+def _load_from_cassandra_to_hive(query_file, days_delete_from):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
         query = f.read()
 
-    query = query.replace("${N}", str(-delete_days))
+    query = query.replace("${N}", str(-days_delete_from))
     logger.info("RUN QUERY")
     logger.info(query)
     trino_operation.run(query)
@@ -256,7 +256,7 @@ with DAG(
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql",
-            "delete_days": load_from_days,
+            "days_delete_from": load_from_days,
         },
     )
 
@@ -265,7 +265,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_002.sql",
-            "delete_days": load_from_days,
+            "days_delete_from": load_from_days,
         },
     )
 
@@ -274,7 +274,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_003.sql",
-            "delete_days": load_from_days,
+            "days_delete_from": load_from_days,
         },
     )
 

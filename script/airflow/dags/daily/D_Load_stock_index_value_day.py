@@ -28,32 +28,32 @@ def _get_stock_index_value(load_from_days):
     import time
 
     tickers = [
-        "^NDX", # NASDAQ 100
-        "^DJI", # Dow Jones Industrial Average
-        "^DJT", # Dow Jones Transportation Averag
-        "^DJU", # Dow Jones Utility Average
-        "^BANK", # NASDAQ Bank
-        "^IXCO", # NASDAQ Computer
-        "^NBI", # NASDAQ Biotechnology
-        "^NDXT", # NASDAQ 100 Technology Sector
-        "^INDS", # NASDAQ Industrial
-        "^INSR", # NASDAQ Insurance
-        "^OFIN", # NASDAQ Other Finance
-        "^IXTC", # NASDAQ Telecommunications
-        "^TRAN", # NASDAQ Transportation
-        "^NYY", # NYSE TMT INDEX
-        "^NYI", # NYSE INTL 100 INDEX
-        "^NY", # NYSE U.S. 100 Index
-        "^NYL", # NYSE WORLD LEADERS INDEX
-        "^XMI", # NYSE ARCA MAJOR MARKET INDEX
-        "^OEX", # S&P 100 INDEX
-        "^GSPC", # S&P 500
-        "^HSI", # HANG SENG INDEX
-        "^FCHI", # CAC 40
-        "^BVSP", # IBOVESPA
-        "^N225", # Nikkei 225
-        "^RUA", # Russell 3000
-        "^XAX", # NYSE AMEX COMPOSITE INDEX
+        "^NDX",  # NASDAQ 100
+        "^DJI",  # Dow Jones Industrial Average
+        "^DJT",  # Dow Jones Transportation Averag
+        "^DJU",  # Dow Jones Utility Average
+        "^BANK",  # NASDAQ Bank
+        "^IXCO",  # NASDAQ Computer
+        "^NBI",  # NASDAQ Biotechnology
+        "^NDXT",  # NASDAQ 100 Technology Sector
+        "^INDS",  # NASDAQ Industrial
+        "^INSR",  # NASDAQ Insurance
+        "^OFIN",  # NASDAQ Other Finance
+        "^IXTC",  # NASDAQ Telecommunications
+        "^TRAN",  # NASDAQ Transportation
+        "^NYY",  # NYSE TMT INDEX
+        "^NYI",  # NYSE INTL 100 INDEX
+        "^NY",  # NYSE U.S. 100 Index
+        "^NYL",  # NYSE WORLD LEADERS INDEX
+        "^XMI",  # NYSE ARCA MAJOR MARKET INDEX
+        "^OEX",  # S&P 100 INDEX
+        "^GSPC",  # S&P 500
+        "^HSI",  # HANG SENG INDEX
+        "^FCHI",  # CAC 40
+        "^BVSP",  # IBOVESPA
+        "^N225",  # Nikkei 225
+        "^RUA",  # Russell 3000
+        "^XAX",  # NYSE AMEX COMPOSITE INDEX
     ]
 
     interval = "daily"
@@ -138,7 +138,7 @@ def _check_latest_dt():
         _send_warning_notification(warning_message)
 
 
-def _delete_past_data_from_hive(query_file, delete_days):
+def _delete_past_data_from_hive(query_file, days_delete_from):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
@@ -150,20 +150,20 @@ def _delete_past_data_from_hive(query_file, delete_days):
     However, to delete data in a certain period such as deleting from N days ago,
     need to repeat a delete query N times.
     """
-    for N in range(0, delete_days + 1):
+    for N in range(0, days_delete_from + 1):
         query = query_script.replace("${N}", str(-N))
         logger.info("RUN QUERY")
         logger.info(query)
         trino_operation.run(query)
 
 
-def _hive_deletion_check(query_file, delete_days):
+def _hive_deletion_check(query_file, days_delete_from):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
         query = f.read()
 
-    query = query.replace("${N}", str(-delete_days))
+    query = query.replace("${N}", str(-days_delete_from))
     logger.info("RUN QUERY")
     logger.info(query)
     res = trino_operation.run(query)
@@ -176,13 +176,13 @@ def _hive_deletion_check(query_file, delete_days):
         raise AirflowFailException(error_msg)
 
 
-def _load_from_cassandra_to_hive(query_file, delete_days):
+def _load_from_cassandra_to_hive(query_file, days_delete_from):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
         query = f.read()
 
-    query = query.replace("${N}", str(-delete_days))
+    query = query.replace("${N}", str(-days_delete_from))
     logger.info("RUN QUERY")
     logger.info(query)
     trino_operation.run(query)
@@ -237,7 +237,7 @@ with DAG(
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_001.sql",
-            "delete_days": load_from_days,
+            "days_delete_from": load_from_days,
         },
     )
 
@@ -246,7 +246,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_002.sql",
-            "delete_days": load_from_days,
+            "days_delete_from": load_from_days,
         },
     )
 
@@ -255,7 +255,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_003.sql",
-            "delete_days": load_from_days,
+            "days_delete_from": load_from_days,
         },
     )
 

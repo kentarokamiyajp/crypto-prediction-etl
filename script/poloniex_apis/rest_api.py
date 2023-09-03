@@ -31,20 +31,3 @@ class PoloniexOperator:
             end_time=int(end) * 1000,
             limit=500,
         )
-
-
-def main():
-    polo_operator = PoloniexOperator()
-    asset = "BTC_USDT"
-    currency = "BTC"
-    interval = "MINUTE_1"
-    period = 5  # minute
-    # pprint(polo_operator.get_market("BTC_USDT"))
-    # pprint(polo_operator.get_currency(currency))
-    # pprint(polo_operator.get_price(asset))
-    # pprint(polo_operator.get_orderbook(asset))
-    pprint(polo_operator.get_candles(asset, interval, period))
-
-
-if __name__ == "__main__":
-    main()

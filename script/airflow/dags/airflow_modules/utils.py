@@ -2,7 +2,7 @@ import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-from datetime import datetime, timezone, date
+from datetime import datetime, date
 import pandas_market_calendars as mcal
 import pytz
 import airflow_env_variables
@@ -25,7 +25,7 @@ def _unix_time_millisecond_to_second(unix_time):
     return int((unix_time) / 1000.0)
 
 
-def get_ts_now(_timezone):
+def _get_ts_now(_timezone):
     tz = pytz.timezone(_timezone)
     return datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -66,7 +66,7 @@ def process_candle_data_from_poloniex(data):
                         _unix_time_millisecond_to_second(d[12]),
                         _unix_time_millisecond_to_second(d[13]),
                         dt,
-                        get_ts_now(timezone),
+                        _get_ts_now(timezone),
                     ]
                 )
             except Exception as error:
@@ -100,7 +100,7 @@ def process_yahoofinancials_data(data):
                             int(p["date"]),
                             p["formatted_date"],
                             int(tz_gmtoffset),
-                            get_ts_now(timezone),
+                            _get_ts_now(timezone),
                         ]
                     )
                 else:
@@ -119,9 +119,3 @@ def is_makert_open(date, market):
         return True
     else:
         return False
-
-
-if __name__ == "__main__":
-    market = "NYSE"
-    date = "2023-07-16"
-    print(is_makert_open(date, market))

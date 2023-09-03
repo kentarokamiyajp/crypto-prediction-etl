@@ -18,13 +18,3 @@ def send_line_message(message):
         headers=headers,
         params=payload,
     )
-
-def check_variables():
-    # print(env_variables)
-    print(env_variables.LINE_NOTIFY_URL)
-
-if __name__ == "__main__":
-    # message = "Notification Test"
-    # send_line_message(message)
-    
-    check_variables()
