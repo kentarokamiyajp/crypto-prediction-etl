@@ -86,6 +86,32 @@ with DAG(
             mode=_mode,
             timeout=_timeout,
         )
+        
+        wait_for_D_Load_crypto_market_trade = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_market_trade",
+            external_dag_id="D_Load_crypto_market_trade",
+            external_task_id="dag_end",
+            allowed_states=_allowed_states,
+            failed_states=_failed_states,
+            check_existence=_check_existence,
+            poke_interval=_poke_interval,
+            execution_delta=_execution_delta,
+            mode=_mode,
+            timeout=_timeout,
+        )
+        
+        wait_for_D_Load_crypto_order_book = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_order_book",
+            external_dag_id="D_Load_crypto_order_book",
+            external_task_id="dag_end",
+            allowed_states=_allowed_states,
+            failed_states=_failed_states,
+            check_existence=_check_existence,
+            poke_interval=_poke_interval,
+            execution_delta=_execution_delta,
+            mode=_mode,
+            timeout=_timeout,
+        )
 
         wait_for_D_Load_forex_rate_day = ExternalTaskSensor(
             task_id="wait_for_D_Load_forex_rate_day",
@@ -143,6 +169,8 @@ with DAG(
             wait_for_D_Load_crude_oil_price_day,
             wait_for_D_Load_crypto_candles_day,
             wait_for_D_Load_crypto_candles_minute,
+            wait_for_D_Load_crypto_market_trade,
+            wait_for_D_Load_crypto_order_book,
             wait_for_D_Load_forex_rate_day,
             wait_for_D_Load_gold_price_day,
             wait_for_D_Load_natural_gas_price_day,

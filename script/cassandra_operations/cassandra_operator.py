@@ -27,7 +27,7 @@ class Operator:
         res = self.session.execute(query, timeout=60 * 60 * 10)
         return res
 
-    def count_expected_variables(self, query, target_data):
+    def _count_expected_variables(self, query, target_data):
         if len(target_data) != query.count("%s"):
             print(
                 "Expected {} %s in the query, but got {} %s".format(
@@ -37,11 +37,11 @@ class Operator:
             sys.exit(1)
 
     def insert_single_data(self, query, data):
-        self.count_expected_variables(query, data)
+        self._count_expected_variables(query, data)
         self.session.execute(query, tuple(data))
 
     def insert_batch_data(self, query, batch_data):
-        self.count_expected_variables(query, batch_data[0])
+        self._count_expected_variables(query, batch_data[0])
         batch = BatchStatement()
         for data in batch_data:
             batch.add(SimpleStatement(query), tuple(d for d in data))
