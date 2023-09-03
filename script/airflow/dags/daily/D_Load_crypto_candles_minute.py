@@ -24,7 +24,7 @@ def _send_warning_notification(optional_message=None):
     send_notification(dag_id, tags, "WARNING", optional_message)
 
 
-def _get_candle_data():
+def _get_candle_data(load_from_days):
     import time
     from airflow_modules import poloniex_operation
 
@@ -44,7 +44,7 @@ def _get_candle_data():
 
     interval = "MINUTE_1"
 
-    target_days = 2  # data of how many days ago you want to get.
+    target_days = load_from_days  # data of how many days ago you want to get.
     seconds_of_one_day = 60 * 60 * 24  # seconds of one day
     period = seconds_of_one_day * target_days
     to_time = time.time()  # from this time to get the past data
@@ -208,6 +208,7 @@ def _load_from_cassandra_to_hive(query_file, delete_days):
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
+load_from_days = 7
 
 with DAG(
     dag_id,
@@ -226,6 +227,7 @@ with DAG(
     get_candle_data = PythonOperator(
         task_id="get_candle_minite_for_1day",
         python_callable=_get_candle_data,
+        op_kwargs={"load_from_days": load_from_days},
         pool="poloniex_pool",
         do_xcom_push=True,
     )
@@ -249,14 +251,12 @@ with DAG(
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
-    delete_days = 3
-
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql",
-            "delete_days": delete_days,
+            "delete_days": load_from_days,
         },
     )
 
@@ -265,7 +265,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_002.sql",
-            "delete_days": delete_days,
+            "delete_days": load_from_days,
         },
     )
 
@@ -274,7 +274,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_003.sql",
-            "delete_days": delete_days,
+            "delete_days": load_from_days,
         },
     )
 
