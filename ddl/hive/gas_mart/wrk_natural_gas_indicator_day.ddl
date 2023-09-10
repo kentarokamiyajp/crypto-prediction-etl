@@ -27,6 +27,12 @@ CREATE TABLE IF NOT EXISTS gas_mart.wrk_natural_gas_indicator_day (
     aroon_up float COMMENT 'Based on last High price',
     aroon_down float COMMENT 'Based on last Low price',
     aroon_oscillator float COMMENT 'AroonUp - AroonDown',
+    sma5 float COMMENT 'Simple Moving Average for 5 days',
+    sma10 float COMMENT 'Simple Moving Average for 10 days',
+    sma30 float COMMENT 'Simple Moving Average for 30 days',
+    ema5 float COMMENT 'Exponential Moving Average for 5 days',
+    ema10 float COMMENT 'Exponential Moving Average for 10 days',
+    ema30 float COMMENT 'Exponential Moving Average for 30 days',
     N_multiple float COMMENT 'If the OHLC value is too small, it is multiplied by N'
 )
 COMMENT 'natural gas indicator for each day'

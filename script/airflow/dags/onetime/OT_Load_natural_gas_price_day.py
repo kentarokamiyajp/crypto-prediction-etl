@@ -33,9 +33,7 @@ def _get_natural_gas_price_past_data():
     from_ts = to_ts - period  # from this time to get the past data
 
     res = None
-    window_size = (
-        seconds_of_one_day * 100
-    )  # Get data of <window_size> days for each time.
+    window_size = seconds_of_one_day * 100  # Get data of <window_size> days for each time.
     curr_from_ts = from_ts
     curr_to_ts = curr_from_ts + window_size
     while True:
@@ -44,9 +42,7 @@ def _get_natural_gas_price_past_data():
 
         logger.info("Load from {} to {}".format(curr_from_date, curr_to_date))
 
-        data = yahoofinancials_operation.get_data_from_yahoofinancials(
-            symbols, interval, curr_from_date, curr_to_date
-        )
+        data = yahoofinancials_operation.get_data_from_yahoofinancials(symbols, interval, curr_from_date, curr_to_date)
 
         if res == None:
             res = data

@@ -47,15 +47,13 @@ def main():
     """
 
     # Create consumer
-    consumer = KafkaConsumer(
-        curr_date, curr_timestamp, consumer_id, group_id, offset_type
-    )
+    consumer = KafkaConsumer(curr_date, curr_timestamp, consumer_id, group_id, offset_type)
     consumer.subscribe([topic_id])
 
     max_retry_cnt = int(os.environ.get("RETRY_COUNT"))
     curr_retry_cnt = 0
     sleep_time = 600
-    
+
     consumer.logger.info("Start to consume")
     while True:
         try:
@@ -106,11 +104,7 @@ def main():
                 consumer.close()
                 break
             else:
-                consumer.logger.error(
-                    "Kafka Consumer failed !!! Retry ({}/{})".format(
-                        curr_retry_cnt, max_retry_cnt
-                    )
-                )
+                consumer.logger.error("Kafka Consumer failed !!! Retry ({}/{})".format(curr_retry_cnt, max_retry_cnt))
                 consumer.logger.error("Error:".format(error))
                 consumer.logger.error(traceback.format_exc())
             time.sleep(sleep_time)

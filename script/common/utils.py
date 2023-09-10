@@ -6,9 +6,9 @@ import env_variables
 
 
 def send_line_message(message):
-    print('=========================')
+    print("=========================")
     print(env_variables)
-    print('=========================')
+    print("=========================")
     url = env_variables.LINE_NOTIFY_URL
     access_token = env_variables.LINE_ACCESS_TOKEN
     headers = {"Authorization": "Bearer " + access_token}

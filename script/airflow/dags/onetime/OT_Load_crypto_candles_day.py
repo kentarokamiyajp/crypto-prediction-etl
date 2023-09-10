@@ -50,12 +50,8 @@ def _get_crypto_candle_day_past_data():
     while True:
         for asset in assets:
             try:
-                logger.info(
-                    "{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time)
-                )
-                data = poloniex_operation.get_candle_data(
-                    asset, interval, curr_from_time, curr_to_time
-                )
+                logger.info("{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time))
+                data = poloniex_operation.get_candle_data(asset, interval, curr_from_time, curr_to_time)
                 if data != None:
                     if asset in res:
                         res[asset].extend(data)
@@ -64,11 +60,7 @@ def _get_crypto_candle_day_past_data():
             except Exception as error:
                 logger.error("Error: {}".format(error))
                 logger.error(traceback.format_exc())
-                logger.warn(
-                    "Probably, {} does not exists at the time because it's new currency".format(
-                        asset
-                    )
-                )
+                logger.warn("Probably, {} does not exists at the time because it's new currency".format(asset))
             time.sleep(5)
         curr_from_time = curr_to_time
         curr_to_time = curr_from_time + window_size

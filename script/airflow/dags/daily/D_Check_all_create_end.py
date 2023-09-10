@@ -46,9 +46,7 @@ with DAG(
     _mode = "reschedule"
     _timeout = 1800
 
-    with TaskGroup(
-        "wait_target_tasks", tooltip="Wait for the all create tasks finish"
-    ) as wait_target_tasks:
+    with TaskGroup("wait_target_tasks", tooltip="Wait for the all create tasks finish") as wait_target_tasks:
         wait_for_D_Create_indicator_day = ExternalTaskSensor(
             task_id="wait_for_D_Create_indicator_day",
             external_dag_id="D_Create_indicator_day",

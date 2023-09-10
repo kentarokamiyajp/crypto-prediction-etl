@@ -32,9 +32,7 @@ def _get_forex_rate_past_data():
     from_ts = to_ts - period  # from this time to get the past data
 
     res = None
-    window_size = (
-        seconds_of_one_day * 100
-    )  # Get data of <window_size> days for each time.
+    window_size = seconds_of_one_day * 100  # Get data of <window_size> days for each time.
     curr_from_ts = from_ts
     curr_to_ts = curr_from_ts + window_size
     while True:

@@ -118,10 +118,4 @@ with DAG(
 
     dag_end = DummyOperator(task_id="dag_end")
 
-    (
-        dag_start
-        >> delete_past_data_from_hive
-        >> hive_deletion_check
-        >> load_from_cassandra_to_hive
-        >> dag_end
-    )
+    (dag_start >> delete_past_data_from_hive >> hive_deletion_check >> load_from_cassandra_to_hive >> dag_end)

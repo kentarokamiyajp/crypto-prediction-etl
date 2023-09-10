@@ -29,9 +29,7 @@ def process_websocket_response(response):
             {
                 "id": data["symbol"],  # symbol name
                 "trade_id": data["id"],  # trade id
-                "createTime": _unix_time_millisecond_to_second(
-                    data["createTime"]
-                ),  # time the record was created
+                "createTime": _unix_time_millisecond_to_second(data["createTime"]),  # time the record was created
                 "amount": data[
                     "amount"
                 ],  # e.g., amount (total price of the traded BTC coins) of USD$, amount = quantity*price
@@ -46,12 +44,8 @@ def process_websocket_response(response):
     return trade_data
 
 
-def _start_procedure(
-    producer_id, connection_type, request_data, send_kafka, kafka_config
-):
-    polo_ws_operator = websocket_api.PoloniexSocketOperator(
-        connection_type, request_data, send_kafka, kafka_config
-    )
+def _start_procedure(producer_id, connection_type, request_data, send_kafka, kafka_config):
+    polo_ws_operator = websocket_api.PoloniexSocketOperator(connection_type, request_data, send_kafka, kafka_config)
 
     retry_count = 0
     max_retry_count = int(os.environ.get("RETRY_COUNT"))
@@ -60,12 +54,8 @@ def _start_procedure(
             try:
                 polo_ws_operator.run_forever()
             except Exception as error:
-                polo_ws_operator.kafka_producer.logger.warning(
-                    f"API ERROR: Could not get market trade data ({error})"
-                )
-                polo_ws_operator.kafka_producer.logger.warning(
-                    f"Retry Request: {retry_count}"
-                )
+                polo_ws_operator.kafka_producer.logger.warning(f"API ERROR: Could not get market trade data ({error})")
+                polo_ws_operator.kafka_producer.logger.warning(f"Retry Request: {retry_count}")
                 polo_ws_operator.kafka_producer.logger.warning(traceback.format_exc())
                 if retry_count > max_retry_count:
                     break
