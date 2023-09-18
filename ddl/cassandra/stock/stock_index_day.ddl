@@ -1,3 +1,5 @@
+DROP TABLE stock.stock_index_day;
+
 CREATE TABLE IF NOT EXISTS stock.stock_index_day (
     id varchar,
     low float,

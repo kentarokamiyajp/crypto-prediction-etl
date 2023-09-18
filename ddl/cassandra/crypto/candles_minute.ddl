@@ -1,3 +1,5 @@
+DROP TABLE crypto.candles_minute;
+
 CREATE TABLE IF NOT EXISTS crypto.candles_minute (
     id varchar,
     low float,

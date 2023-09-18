@@ -1,3 +1,5 @@
+DROP TABLE gold.gold_price_day;
+
 CREATE TABLE IF NOT EXISTS gold.gold_price_day (
     id varchar,
     low float,
