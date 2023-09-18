@@ -1,6 +1,6 @@
-DROP TABLE oil.crude_oil_price_day;
+DROP TABLE stock.stock_index_day;
 
-CREATE TABLE IF NOT EXISTS oil.crude_oil_price_day (
+CREATE TABLE IF NOT EXISTS stock.stock_index_day (
     id varchar,
     low float,
     high float,
