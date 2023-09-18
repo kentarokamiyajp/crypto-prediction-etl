@@ -80,9 +80,7 @@ with DAG(
     _mode = "reschedule"
     _timeout = 1800
 
-    with TaskGroup(
-        "wait_prev_task_section", tooltip="Wait for previous tasks finish"
-    ) as wait_prev_tasks:
+    with TaskGroup("wait_prev_task_section", tooltip="Wait for previous tasks finish") as wait_prev_tasks:
         wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
             task_id="wait_for_D_Load_crude_oil_price_day",
             external_dag_id="D_Load_crude_oil_price_day",
@@ -206,14 +204,10 @@ with DAG(
         str(update_N_months_from),
     ]
 
-    with TaskGroup(
-        "spark_create_indicator", tooltip="Create indicators for each feature"
-    ) as spark_create_indicator:
+    with TaskGroup("spark_create_indicator", tooltip="Create indicators for each feature") as spark_create_indicator:
         create_crude_oil_indicator = SparkSubmitOperator(
             task_id="create_crude_oil_indicator",
-            application="{}/pyspark/D_Create_crude_oil_ind_day_001.py".format(
-                airflow_env_variables.QUERY_SCRIPT_HOME
-            ),
+            application="{}/pyspark/D_Create_crude_oil_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -222,9 +216,7 @@ with DAG(
 
         create_crypto_indicator = SparkSubmitOperator(
             task_id="create_crypto_indicator",
-            application="{}/pyspark/D_Create_crypto_ind_day_001.py".format(
-                airflow_env_variables.QUERY_SCRIPT_HOME
-            ),
+            application="{}/pyspark/D_Create_crypto_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -233,9 +225,7 @@ with DAG(
 
         create_forex_indicator = SparkSubmitOperator(
             task_id="create_forex_indicator",
-            application="{}/pyspark/D_Create_forex_rate_ind_day_001.py".format(
-                airflow_env_variables.QUERY_SCRIPT_HOME
-            ),
+            application="{}/pyspark/D_Create_forex_rate_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -244,9 +234,7 @@ with DAG(
 
         create_gold_indicator = SparkSubmitOperator(
             task_id="create_gold_indicator",
-            application="{}/pyspark/D_Create_gold_price_ind_day_001.py".format(
-                airflow_env_variables.QUERY_SCRIPT_HOME
-            ),
+            application="{}/pyspark/D_Create_gold_price_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -292,9 +280,7 @@ with DAG(
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
     trino_pool = "trino_pool"
 
-    with TaskGroup(
-        "delete_past_data", tooltip="Delete past data in hive mart"
-    ) as delete_past_data:
+    with TaskGroup("delete_past_data", tooltip="Delete past data in hive mart") as delete_past_data:
         delete_past_crude_oil_data = PythonOperator(
             task_id="delete_past_crude_oil_data",
             python_callable=_delete_from_hive_mart_table,

@@ -62,9 +62,7 @@ with DAG(
     spark_script = "OT_Create_forex_rate_ind_day_001"
     create_forex_rate_indicators = SparkSubmitOperator(
         task_id="create_forex_rate_indicators",
-        application="{}/pyspark/{}.py".format(
-            airflow_env_variables.QUERY_SCRIPT_HOME, spark_script
-        ),
+        application="{}/pyspark/{}.py".format(airflow_env_variables.QUERY_SCRIPT_HOME, spark_script),
         conf={
             "spark.eventLog.dir": "hdfs://{}:{}{}".format(
                 env_variables.HISTORY_SERVER_HOST,

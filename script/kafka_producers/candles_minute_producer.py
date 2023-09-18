@@ -54,15 +54,11 @@ def main():
                 try:
                     end = time.time()
                     start = end - 60 * int(period)
-                    raw_candle_data = polo_api_operator.get_candles(
-                        symbol, interval, start, end
-                    )
+                    raw_candle_data = polo_api_operator.get_candles(symbol, interval, start, end)
                     retry_count = 0
                 except Exception as error:
                     retry_count += 1
-                    kafka_producer.logger.warning(
-                        f"API ERROR: Could not get candle data ({error})"
-                    )
+                    kafka_producer.logger.warning(f"API ERROR: Could not get candle data ({error})")
                     kafka_producer.logger.warning(f"Retry Request: {retry_count}")
                     kafka_producer.logger.warning(traceback.format_exc())
                     if retry_count == max_retry_count:
@@ -95,9 +91,7 @@ def main():
                     ]
                 }
 
-                kafka_producer.produce_message(
-                    topic_id, json.dumps(candle_data), int(num_partitions)
-                )
+                kafka_producer.produce_message(topic_id, json.dumps(candle_data), int(num_partitions))
                 kafka_producer.poll_message(timeout=10)
                 time.sleep(10)
 

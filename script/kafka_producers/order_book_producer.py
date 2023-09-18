@@ -28,9 +28,7 @@ def process_websocket_response(response):
         "data": [
             {
                 "id": data["symbol"],  # symbol name
-                "createTime": _unix_time_millisecond_to_second(
-                    data["createTime"]
-                ),  # time the record was created
+                "createTime": _unix_time_millisecond_to_second(data["createTime"]),  # time the record was created
                 "asks": data["asks"],  # sell orders, in ascending order of price
                 "bids": data["bids"],  # buy orders, in descending order of price
                 "seqid": data["id"],  # id of the record (SeqId)
@@ -43,9 +41,7 @@ def process_websocket_response(response):
 
 
 def _start_procedure(producer_id, connection_type, request_data, send_kafka, kafka_config):
-    polo_ws_operator = websocket_api.PoloniexSocketOperator(
-        connection_type, request_data, send_kafka, kafka_config
-    )
+    polo_ws_operator = websocket_api.PoloniexSocketOperator(connection_type, request_data, send_kafka, kafka_config)
 
     retry_count = 0
     max_retry_count = int(os.environ.get("RETRY_COUNT"))
@@ -54,12 +50,8 @@ def _start_procedure(producer_id, connection_type, request_data, send_kafka, kaf
             try:
                 polo_ws_operator.run_forever()
             except Exception as error:
-                polo_ws_operator.kafka_producer.logger.warning(
-                    f"API ERROR: Could not get order book data ({error})"
-                )
-                polo_ws_operator.kafka_producer.logger.warning(
-                    f"Retry Request: {retry_count}"
-                )
+                polo_ws_operator.kafka_producer.logger.warning(f"API ERROR: Could not get order book data ({error})")
+                polo_ws_operator.kafka_producer.logger.warning(f"Retry Request: {retry_count}")
                 polo_ws_operator.kafka_producer.logger.warning(traceback.format_exc())
                 if retry_count > max_retry_count:
                     break

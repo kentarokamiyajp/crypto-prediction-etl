@@ -1,4 +1,4 @@
-import sys,os
+import sys, os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.sql.types import *
@@ -90,9 +90,7 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
     # Calcuration main
     #######################
     # MACD(12,26,9)
-    macd_results = indicators.get_macd(
-        quotes, fast_periods=12, slow_periods=26, signal_periods=9
-    )
+    macd_results = indicators.get_macd(quotes, fast_periods=12, slow_periods=26, signal_periods=9)
     indicator_values["macd"] = macd_results
 
     # Relative Strength Index (14)
@@ -100,9 +98,7 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
     indicator_values["rsi"] = rsi_results
 
     # Bollinger Bands(20, 2)
-    bollinger_bands_results = indicators.get_bollinger_bands(
-        quotes, lookback_periods=20, standard_deviations=2
-    )
+    bollinger_bands_results = indicators.get_bollinger_bands(quotes, lookback_periods=20, standard_deviations=2)
     indicator_values["bollinger_bands"] = bollinger_bands_results
 
     # On-Balance Volume
@@ -110,20 +106,40 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
     indicator_values["obv"] = obv_results
 
     # Ichimoku Cloud (9,26,52)
-    ichimoku_results = indicators.get_ichimoku(
-        quotes, tenkan_periods=9, kijun_periods=26, senkou_b_periods=52
-    )
+    ichimoku_results = indicators.get_ichimoku(quotes, tenkan_periods=9, kijun_periods=26, senkou_b_periods=52)
     indicator_values["ichimoku"] = ichimoku_results
 
     # Stochastic Oscillator %K(14),%D(3) (slow)
-    stoch_results = indicators.get_stoch(
-        quotes, lookback_periods=14, signal_periods=3, smooth_periods=3
-    )
+    stoch_results = indicators.get_stoch(quotes, lookback_periods=14, signal_periods=3, smooth_periods=3)
     indicator_values["stoch"] = stoch_results
 
     # Aroon
     aroon_results = indicators.get_aroon(quotes, lookback_periods=25)
     indicator_values["aroon"] = aroon_results
+
+    # Simple Moving Average 5 days
+    sma5_results = indicators.get_sma(quotes, lookback_periods=5)
+    indicator_values["sma5"] = sma5_results
+
+    # Simple Moving Average 10 days
+    sma10_results = indicators.get_sma(quotes, lookback_periods=10)
+    indicator_values["sma10"] = sma10_results
+
+    # Simple Moving Average 30 days
+    sma30_results = indicators.get_sma(quotes, lookback_periods=30)
+    indicator_values["sma30"] = sma30_results
+
+    # Exponential Moving Average 5 days
+    ema5_results = indicators.get_ema(quotes, lookback_periods=5)
+    indicator_values["ema5"] = ema5_results
+
+    # Exponential Moving Average 10 days
+    ema10_results = indicators.get_ema(quotes, lookback_periods=10)
+    indicator_values["ema10"] = ema10_results
+
+    # Exponential Moving Average 30 days
+    ema30_results = indicators.get_ema(quotes, lookback_periods=30)
+    indicator_values["ema30"] = ema30_results
 
     ##########################
     # Merge all indicator values
@@ -137,6 +153,12 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
         indicator_values["ichimoku"],
         indicator_values["stoch"],
         indicator_values["aroon"],
+        indicator_values["sma5"],
+        indicator_values["sma10"],
+        indicator_values["sma30"],
+        indicator_values["ema5"],
+        indicator_values["ema10"],
+        indicator_values["ema30"],
     ):
         all_indicaters[data[0].date.strftime("%Y-%m-%d")] = [
             data[0].date,
@@ -159,6 +181,12 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
             float(data[6].aroon_up) if data[6].aroon_up else None,
             float(data[6].aroon_down) if data[6].aroon_down else None,
             float(data[6].oscillator) if data[6].oscillator else None,
+            float(data[7].sma) if data[7].sma else None,
+            float(data[8].sma) if data[8].sma else None,
+            float(data[9].sma) if data[9].sma else None,
+            float(data[10].ema) if data[10].ema else None,
+            float(data[11].ema) if data[11].ema else None,
+            float(data[12].ema) if data[12].ema else None,
             N_mul,
         ]
 
@@ -183,6 +211,12 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
         "aroon_up",
         "aroon_down",
         "aroon_oscillator",
+        "sma5",
+        "sma10",
+        "sma30",
+        "ema5",
+        "ema10",
+        "ema30",
         "N_multiple",
     ]
 
@@ -209,21 +243,27 @@ for row in crude_oil_symbol_df.select(crude_oil_symbol_df.id).collect():
             StructField("aroon_up", FloatType(), True),
             StructField("aroon_down", FloatType(), True),
             StructField("aroon_oscillator", FloatType(), True),
+            StructField("sma5", FloatType(), True),
+            StructField("sma10", FloatType(), True),
+            StructField("sma30", FloatType(), True),
+            StructField("ema5", FloatType(), True),
+            StructField("ema10", FloatType(), True),
+            StructField("ema30", FloatType(), True),
             StructField("N_multiple", FloatType(), True),
         ]
     )
 
     # Create pandas dataframe from python dict object that contains the indicators.
-    pd_all_indicaters_df = pd.DataFrame.from_dict(
-        all_indicaters, orient="index", columns=columns
-    )
+    pd_all_indicaters_df = pd.DataFrame.from_dict(all_indicaters, orient="index", columns=columns)
 
     # Create spark dataframe from pandas dataframe
     sp_all_indicaters_df = spark.createDataFrame(pd_all_indicaters_df, schema=schema)
 
     # Join the two spark dataframes of historical data and indicator data.
     sp_history_with_indicators_df = sp_crude_oil_history_df.join(
-        sp_all_indicaters_df, sp_crude_oil_history_df.dt == sp_all_indicaters_df.dt_, "outer"
+        sp_all_indicaters_df,
+        sp_crude_oil_history_df.dt == sp_all_indicaters_df.dt_,
+        "outer",
     )
 
     # Union spark dataframe
@@ -263,6 +303,12 @@ insert_data = final_results.select(
     col("aroon_up"),
     col("aroon_down"),
     col("aroon_oscillator"),
+    col("sma5"),
+    col("sma10"),
+    col("sma30"),
+    col("ema5"),
+    col("ema10"),
+    col("ema30"),
     col("N_multiple"),
     col("year"),
     col("month"),

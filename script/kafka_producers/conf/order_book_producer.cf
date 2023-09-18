@@ -1,7 +1,8 @@
 # Producer config
 NUM_PARTITIONS=3
 REPLICATION_FOCTOR=1
-RETENTION_DAYS=3
+RETENTION_DAYS=1
+CLEANUP_POLICY=delete
 TOPIC_ID="crypto.order_book"
 
 # Target symbols

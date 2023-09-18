@@ -58,13 +58,9 @@ def _get_crypto_candle_minute_past_data():
             curr_size += 1
             try:
                 logger.info(
-                    "{}: Load from {} to {} ({}/{})".format(
-                        asset, curr_from_time, curr_to_time, curr_size, batch_size
-                    )
+                    "{}: Load from {} to {} ({}/{})".format(asset, curr_from_time, curr_to_time, curr_size, batch_size)
                 )
-                data = poloniex_operation.get_candle_data(
-                    asset, interval, curr_from_time, curr_to_time
-                )
+                data = poloniex_operation.get_candle_data(asset, interval, curr_from_time, curr_to_time)
                 if data != None:
                     if asset in res:
                         res[asset].extend(data)

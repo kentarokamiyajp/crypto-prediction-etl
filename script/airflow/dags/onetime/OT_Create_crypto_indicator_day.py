@@ -62,9 +62,7 @@ with DAG(
     spark_script = "OT_Create_crypto_ind_day_001"
     create_crypto_indicators = SparkSubmitOperator(
         task_id="create_crypto_indicators",
-        application="{}/pyspark/{}.py".format(
-            airflow_env_variables.QUERY_SCRIPT_HOME, spark_script
-        ),
+        application="{}/pyspark/{}.py".format(airflow_env_variables.QUERY_SCRIPT_HOME, spark_script),
         conf={
             "spark.eventLog.dir": "hdfs://{}:{}{}".format(
                 env_variables.HISTORY_SERVER_HOST,

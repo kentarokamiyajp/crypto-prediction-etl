@@ -37,9 +37,9 @@ class KafkaConsumer:
 
     def subscribe(self, topics: list):
         self.consumer.subscribe(topics)
-        
+
     def poll(self, timeout: float):
         return self.consumer.poll(timeout)
-    
+
     def close(self):
         self.consumer.close()

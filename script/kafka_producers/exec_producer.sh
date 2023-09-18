@@ -63,6 +63,7 @@ LOG_FILE=${LOGDIR}/${PRODUCER_ID}_${TS_NOW}.log
 
 # 1 day = 86400000ms
 RETENTION_MS=$((RETENTION_DAYS*86400000))
+SEGMENT_MS=$((RETENTION_DAYS*86400000))
 
 # Create a topic if not exist.
 kafka-topics.sh --bootstrap-server "${KAFKA_BOOTSTRAP_SERVERS}" \
@@ -72,6 +73,8 @@ kafka-topics.sh --bootstrap-server "${KAFKA_BOOTSTRAP_SERVERS}" \
     --replication-factor "${REPLICATION_FOCTOR}" \
     --if-not-exists \
     --config retention.ms="${RETENTION_MS}"\
+    --config segment.ms="${SEGMENT_MS}"\
+    --config cleanup.policy="${CLEANUP_POLICY}"\
     1>>$LOG_FILE 2>>$LOG_FILE
 
 if [ $? -ne 0 ]; then

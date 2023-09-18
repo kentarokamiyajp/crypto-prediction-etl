@@ -46,15 +46,13 @@ def main():
     """
 
     # Create consumer
-    consumer = KafkaConsumer(
-        curr_date, curr_timestamp, consumer_id, group_id, offset_type
-    )
+    consumer = KafkaConsumer(curr_date, curr_timestamp, consumer_id, group_id, offset_type)
     consumer.subscribe([topic_id])
 
     max_retry_cnt = int(os.environ.get("RETRY_COUNT"))
     curr_retry_cnt = 0
     sleep_time = 600
-    
+
     consumer.logger.info("Start to consume")
     while True:
         try:
@@ -64,7 +62,7 @@ def main():
             if msg.error():
                 consumer.logger.error("Consumer error: {}".format(msg.error()))
                 sys.exit(1)
-            
+
             consumed_data = json.loads(msg.value().decode("utf-8"))
 
             for d in consumed_data["data"]:
@@ -74,17 +72,17 @@ def main():
                 ts_send = int(d["ts_send"])
                 asks = d["asks"]
                 bids = d["bids"]
-                
-                for order_type, orders in [['ask',asks],['bid',bids]]:
+
+                for order_type, orders in [["ask", asks], ["bid", bids]]:
                     batch_data = []
                     for i, order in enumerate(orders):
                         quote_price = float(order[0])
                         base_amount = float(order[1])
-                        
-                        # Rank of the order in order book. 
+
+                        # Rank of the order in order book.
                         # From '1' to '20' (since websocket API can only get top 20 orders as of 2023-08-13)
-                        order_rank = i+1
-                        
+                        order_rank = i + 1
+
                         batch_data.append(
                             [
                                 id,
@@ -114,10 +112,11 @@ def main():
                 consumer.close()
                 break
             else:
-                consumer.logger.error("Kafka consumer failed !!! Retry ({}/{})".format(curr_retry_cnt,max_retry_cnt))
+                consumer.logger.error("Kafka consumer failed !!! Retry ({}/{})".format(curr_retry_cnt, max_retry_cnt))
                 consumer.logger.error("Error:".format(error))
                 consumer.logger.error(traceback.format_exc())
             time.sleep(sleep_time)
+
 
 if __name__ == "__main__":
     main()

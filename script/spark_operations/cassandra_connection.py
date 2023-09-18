@@ -17,15 +17,11 @@ spark = (
     SparkSession.builder.appName("SparkCassandraApp")
     .config(
         "spark.master",
-        "spark://{}:{}".format(
-            env_variables.SPARK_MASTER_HOST, env_variables.SPARK_MASTER_PORT
-        ),
+        "spark://{}:{}".format(env_variables.SPARK_MASTER_HOST, env_variables.SPARK_MASTER_PORT),
     )
     .config(
         "spark.hadoop.hive.metastore.uris",
-        "thrift://{}:{}".format(
-            env_variables.HIVE_METASTORE_HOST, env_variables.HIVE_METASTORE_PORT
-        ),
+        "thrift://{}:{}".format(env_variables.HIVE_METASTORE_HOST, env_variables.HIVE_METASTORE_PORT),
     )
     .config("spark.sql.warehouse.dir", "/user/hive/warehouse")
     .config("spark.cassandra.connection.host", env_variables.CASSANDRA_HOST)
@@ -37,10 +33,6 @@ spark = (
 )
 spark.sparkContext.setLogLevel("WARN")
 
-df = (
-    spark.read.format("org.apache.spark.sql.cassandra")
-    .options(table="candles_day", keyspace="crypto")
-    .load()
-)
+df = spark.read.format("org.apache.spark.sql.cassandra").options(table="candles_day", keyspace="crypto").load()
 
 df.show()

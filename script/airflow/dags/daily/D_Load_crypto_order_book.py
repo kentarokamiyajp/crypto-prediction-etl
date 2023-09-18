@@ -87,7 +87,7 @@ with DAG(
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
-    days_delete_from = 3
+    days_delete_from = 2
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",
@@ -118,10 +118,4 @@ with DAG(
 
     dag_end = DummyOperator(task_id="dag_end")
 
-    (
-        dag_start
-        >> delete_past_data_from_hive
-        >> hive_deletion_check
-        >> load_from_cassandra_to_hive
-        >> dag_end
-    )
+    (dag_start >> delete_past_data_from_hive >> hive_deletion_check >> load_from_cassandra_to_hive >> dag_end)

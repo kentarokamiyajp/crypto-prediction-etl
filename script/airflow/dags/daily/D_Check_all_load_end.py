@@ -45,9 +45,7 @@ with DAG(
     _mode = "reschedule"
     _timeout = 1800
 
-    with TaskGroup(
-        "wait_target_tasks", tooltip="Wait for the all load tasks finish"
-    ) as wait_target_tasks:
+    with TaskGroup("wait_target_tasks", tooltip="Wait for the all load tasks finish") as wait_target_tasks:
         wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
             task_id="wait_for_D_Load_crude_oil_price_day",
             external_dag_id="D_Load_crude_oil_price_day",
@@ -86,7 +84,7 @@ with DAG(
             mode=_mode,
             timeout=_timeout,
         )
-        
+
         wait_for_D_Load_crypto_market_trade = ExternalTaskSensor(
             task_id="wait_for_D_Load_crypto_market_trade",
             external_dag_id="D_Load_crypto_market_trade",
@@ -99,7 +97,7 @@ with DAG(
             mode=_mode,
             timeout=_timeout,
         )
-        
+
         wait_for_D_Load_crypto_order_book = ExternalTaskSensor(
             task_id="wait_for_D_Load_crypto_order_book",
             external_dag_id="D_Load_crypto_order_book",

@@ -49,9 +49,7 @@ def _get_forex_rate():
 
     logger.info("Load from {} to {}".format(from_date, to_date))
 
-    return yahoofinancials_operation.get_data_from_yahoofinancials(
-        currencies, interval, from_date, to_date
-    )
+    return yahoofinancials_operation.get_data_from_yahoofinancials(currencies, interval, from_date, to_date)
 
 
 def _process_forex_rate(ti):
@@ -87,9 +85,7 @@ def _check_latest_dt():
     table_name = "forex_rate_day"
     target_index = "EURUSD=X"
     prev_date_ts = datetime.today() - timedelta(days=1)
-    prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime(
-        "%Y-%m-%d"
-    )
+    prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
     query = f"""
     select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_index}'
@@ -103,9 +99,7 @@ def _check_latest_dt():
     # If there is no data for prev-day even on the market holiday, exit with error.
     market = "NYSE"
     if int(count) == 0 and utils.is_makert_open(prev_date, market):
-        warning_message = "There is no data for prev_date ({}, asset:{})".format(
-            prev_date, target_index
-        )
+        warning_message = "There is no data for prev_date ({}, asset:{})".format(prev_date, target_index)
         logger.warn(warning_message)
         _send_warning_notification(warning_message)
 
@@ -194,9 +188,7 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(
-        task_id="check_latest_dt_existance", python_callable=_check_latest_dt
-    )
+    check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
 
     from airflow_modules import airflow_env_variables
 
