@@ -1,3 +1,5 @@
+DROP TABLE oil.crude_oil_price_day;
+
 CREATE TABLE IF NOT EXISTS oil.crude_oil_price_day (
     id varchar,
     low float,

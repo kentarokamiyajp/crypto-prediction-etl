@@ -1,3 +1,5 @@
+DROP TABLE forex.forex_rate_day;
+
 CREATE TABLE IF NOT EXISTS forex.forex_rate_day (
     id varchar,
     low float,

@@ -1,3 +1,5 @@
+DROP TABLE gas.natural_gas_price_day;
+
 CREATE TABLE IF NOT EXISTS gas.natural_gas_price_day (
     id varchar,
     low float,
