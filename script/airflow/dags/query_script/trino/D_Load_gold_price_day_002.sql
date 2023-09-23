@@ -3,4 +3,4 @@ SELECT
 FROM
     hive.gold_raw.gold_price_day
 WHERE
-    dt >= (date_add('day',${N},current_date))
+    dt_create_utc >= (date_add('day',${N},current_date))

@@ -64,17 +64,17 @@ def _insert_data_to_cassandra(ti):
 
     keyspace = "gold"
     table_name = "gold_price_day"
-    gold_price = ti.xcom_pull(task_ids="process_gold_price_for_ingestion")
+    batch_data = ti.xcom_pull(task_ids="process_gold_price_for_ingestion")
 
     query = f"""
-    INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,dt_unix,dt,tz_gmtoffset,ts_insert_utc)\
+    INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,unixtime_create,dt_create_utc,tz_gmtoffset,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")
     logger.info(query)
 
-    cassandra_operation.insert_data(keyspace, gold_price, query)
+    cassandra_operation.insert_data(keyspace, batch_data, query)
 
 
 def _check_latest_dt():
@@ -88,7 +88,7 @@ def _check_latest_dt():
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
     query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_index}'
+    select count(*) from {table_name} where dt_create_utc = '{prev_date}' and id = '{target_index}'
     """
 
     logger.info("RUN QUERY")
@@ -188,7 +188,7 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
+    check_latest_dt = PythonOperator(task_id="check_latest_dt_existence", python_callable=_check_latest_dt)
 
     from airflow_modules import airflow_env_variables
 
