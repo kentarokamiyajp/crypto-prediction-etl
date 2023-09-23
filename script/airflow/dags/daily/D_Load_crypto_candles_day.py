@@ -42,26 +42,26 @@ def _get_candle_data():
     ]
     interval = "DAY_1"
 
-    res = {}
+    candle_data = {}
     days = 7  # how many days ago you want to get
     period = 60 * 24 * days  # minute
     end = time.time()
     start = end - 60 * period
     for asset in assets:
         logger.info("{}: Load from {} to {}".format(asset, start, end))
-        res[asset] = poloniex_operation.get_candle_data(asset, interval, start, end)
+        candle_data[asset] = poloniex_operation.get_candle_data(asset, interval, start, end)
         time.sleep(10)
 
-    return res
+    return candle_data
 
 
 def _process_candle_data(ti):
     from airflow_modules import utils
 
     candle_data = ti.xcom_pull(task_ids="get_candle_day")
-    res = utils.process_candle_data_from_poloniex(candle_data)
+    batch_data = utils.process_candle_data_from_poloniex(candle_data)
 
-    return res
+    return batch_data
 
 
 def _insert_data_to_cassandra(ti):
@@ -69,18 +69,18 @@ def _insert_data_to_cassandra(ti):
 
     keyspace = "crypto"
     table_name = "candles_day"
-    candle_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
+    batch_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
 
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")
     logger.info(query)
 
-    cassandra_operation.insert_data(keyspace, candle_data, query)
+    cassandra_operation.insert_data(keyspace, batch_data, query)
 
 
 def _check_latest_dt():
@@ -94,7 +94,7 @@ def _check_latest_dt():
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
     query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_asset}'
+    select count(*) from {table_name} where dt_create_utc = '{prev_date}' and id = '{target_asset}'
     """
 
     logger.info("RUN QUERY")

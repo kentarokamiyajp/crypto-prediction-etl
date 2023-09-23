@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS crypto.candles_day (
     interval varchar,
     startTime bigint,
     closeTime bigint,
-    dt date,
+    dt_create_utc date,
     ts_insert_utc timestamp,
-    PRIMARY KEY ((id,dt),startTime,closeTime)
+    PRIMARY KEY ((id,dt_create_utc),startTime,closeTime)
   );
