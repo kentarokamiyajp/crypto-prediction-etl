@@ -109,7 +109,7 @@ def process_yahoofinancials_data(data):
     return batch_data
 
 
-def is_makert_open(date, market):
+def is_market_open(date, market):
     calendar = mcal.get_calendar(market)
     if len(calendar.schedule(start_date=date, end_date=date).index) > 0:
         return True
