@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS crypto_raw.candles_minute (
     dt_create_utc date COMMENT 'date when data was created in a trading system',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
 )
-COMMENT 'crypto candles data for each day'
+COMMENT 'crypto candles data for each minute'
 PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system', 
     month smallint COMMENT 'month data was created in a trading system', 
     day smallint COMMENT 'day data was created in a trading system', 
