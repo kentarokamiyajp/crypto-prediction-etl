@@ -105,7 +105,7 @@ def _get_crypto_candle_minute_past_data():
     table_name = "candles_minute"
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
     cassandra_operation.insert_data(keyspace, candle_data, query)
@@ -139,7 +139,7 @@ def _insert_from_cassandra_to_hive():
             interval_type,
             startTime,
             closeTime,
-            dt,
+            dt_create_utc,
             ts_insert_utc,
             year,
             month,
@@ -162,7 +162,7 @@ def _insert_from_cassandra_to_hive():
         interval,
         startTime,
         closeTime,
-        dt,
+        dt_create_utc,
         ts_insert_utc,
         year (from_unixtime (closeTime)),
         month (from_unixtime (closeTime)),

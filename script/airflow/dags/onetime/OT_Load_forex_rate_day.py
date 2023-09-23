@@ -77,7 +77,7 @@ def _insert_data_to_cassandra(ti):
     forex_rate = ti.xcom_pull(task_ids="process_forex_rate_for_ingestion")
 
     query = f"""
-    INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,dt_unix,dt,tz_gmtoffset,ts_insert_utc)\
+    INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,unixtime_create,dt_create_utc,tz_gmtoffset,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
@@ -105,8 +105,8 @@ def _load_from_cassandra_to_hive():
             volume,
             adjclose,
             currency,
-            dt_unix,
-            dt,
+            unixtime_create,
+            dt_create_utc,
             tz_gmtoffset,
             ts_insert_utc,
             year,
@@ -122,13 +122,13 @@ def _load_from_cassandra_to_hive():
         volume,
         adjclose,
         currency,
-        dt_unix,
-        dt,
+        unixtime_create,
+        dt_create_utc,
         tz_gmtoffset,
         ts_insert_utc,
-        year (from_unixtime (dt_unix)),
-        month (from_unixtime (dt_unix)),
-        day (from_unixtime (dt_unix))
+        year (dt_create_utc),
+        month (dt_create_utc),
+        day (dt_create_utc)
     FROM
         cassandra.forex.forex_rate_day
     """
