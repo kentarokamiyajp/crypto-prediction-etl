@@ -33,6 +33,6 @@ SELECT
     month (dt_create_utc),
     day (dt_create_utc)
 FROM
-    cassandra.gas.natural_gas_price_day
+    cassandra.gold.gold_price_day
 WHERE
     dt_create_utc >= (date_add('day',${N},current_date))
