@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS stock.stock_index_day (
     volume float,
     adjclose float,
     currency varchar,
-    dt_unix bigint,
-    dt date,
+    unixtime_create bigint,
+    dt_create_utc date,
     tz_gmtoffset int,
     ts_insert_utc timestamp,
-    PRIMARY KEY ((id,dt))
+    PRIMARY KEY ((id,dt_create_utc))
   );
