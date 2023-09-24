@@ -126,7 +126,7 @@ def _check_latest_dt():
 
     # If there is no data for prev-day even on the market holiday, exit with error.
     market = "NYSE"
-    if int(count) == 0 and utils.is_makert_open(prev_date, market):
+    if int(count) == 0 and utils.is_market_open(prev_date, market):
         warning_message = "There is no data for prev_date ({}, asset:{})".format(prev_date, target_index)
         logger.warn(warning_message)
         _send_warning_notification(warning_message)
