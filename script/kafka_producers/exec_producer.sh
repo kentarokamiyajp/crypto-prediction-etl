@@ -63,7 +63,7 @@ LOG_FILE=${LOGDIR}/${PRODUCER_ID}_${TS_NOW}.log
 
 # 1 day = 86400000ms
 RETENTION_MS=$((RETENTION_DAYS*86400000))
-SEGMENT_MS=$((RETENTION_DAYS*86400000))
+SEGMENT_MS=86400000
 
 # Create a topic if not exist.
 kafka-topics.sh --bootstrap-server "${KAFKA_BOOTSTRAP_SERVERS}" \
