@@ -8,7 +8,7 @@ INSERT INTO
         price,
         createTime,
         ts_send,
-        dt,
+        dt_insert_utc,
         ts_insert_utc,
         year,
         month,

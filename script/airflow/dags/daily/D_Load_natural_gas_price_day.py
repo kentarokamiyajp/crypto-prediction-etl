@@ -24,7 +24,7 @@ def _send_warning_notification(optional_message=None):
     send_notification(dag_id, tags, "WARNING", optional_message)
 
 
-def _get_natural_gas_price():
+def _get_natural_gas_price(load_from_days):
     from airflow_modules import yahoofinancials_operation, utils
     import time
 
@@ -32,7 +32,7 @@ def _get_natural_gas_price():
     interval = "daily"
 
     # how many days ago you want to get.
-    target_days = 7
+    target_days = load_from_days
 
     # seconds of one day
     seconds_of_one_day = 60 * 60 * 24
@@ -169,11 +169,14 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
+    
+    days_delete_from = 7
 
     get_natural_gas_price = PythonOperator(
         task_id="get_natural_gas_price",
         python_callable=_get_natural_gas_price,
         pool="yfinance_pool",
+        op_kwargs={"load_from_days": days_delete_from},
         do_xcom_push=True,
     )
 
@@ -193,8 +196,6 @@ with DAG(
     from airflow_modules import airflow_env_variables
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
-
-    days_delete_from = 3
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",

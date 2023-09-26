@@ -8,7 +8,7 @@ INSERT INTO
         order_rank,
         createTime,
         ts_send,
-        dt,
+        dt_insert_utc,
         ts_insert_utc,
         year,
         month,

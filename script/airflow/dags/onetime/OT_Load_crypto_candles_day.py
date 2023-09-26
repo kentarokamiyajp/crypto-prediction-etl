@@ -128,8 +128,7 @@ def _load_from_cassandra_to_hive():
             ts_insert_utc,
             year,
             month,
-            day,
-            hour
+            day
         )
     SELECT
         id,
@@ -151,8 +150,7 @@ def _load_from_cassandra_to_hive():
         ts_insert_utc,
         year (from_unixtime (closeTime)),
         month (from_unixtime (closeTime)),
-        day (from_unixtime (closeTime)),
-        hour (from_unixtime (closeTime))
+        day (from_unixtime (closeTime))
     FROM
         cassandra.crypto.candles_day
     """

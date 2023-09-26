@@ -23,7 +23,7 @@ def _send_warning_notification(optional_message=None):
     send_notification(dag_id, tags, "WARNING", optional_message)
 
 
-def _get_candle_data():
+def _get_candle_data(load_from_days):
     import time
     from airflow_modules import poloniex_operation
 
@@ -43,7 +43,7 @@ def _get_candle_data():
     interval = "DAY_1"
 
     candle_data = {}
-    days = 7  # how many days ago you want to get
+    days = load_from_days  # how many days ago you want to get
     period = 60 * 24 * days  # minute
     end = time.time()
     start = end - 60 * period
@@ -175,10 +175,13 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
+    days_delete_from = 7
+
     get_candle_data = PythonOperator(
         task_id="get_candle_day",
         python_callable=_get_candle_data,
         pool="poloniex_pool",
+        op_kwargs={"load_from_days": days_delete_from},
         do_xcom_push=True,
     )
 
@@ -198,8 +201,6 @@ with DAG(
     from airflow_modules import airflow_env_variables
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
-
-    days_delete_from = 3
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",

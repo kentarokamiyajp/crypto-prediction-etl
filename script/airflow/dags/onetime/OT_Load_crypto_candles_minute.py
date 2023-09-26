@@ -111,7 +111,7 @@ def _get_crypto_candle_minute_past_data():
     cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
-def _insert_from_cassandra_to_hive():
+def _load_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
     # Delete all from hive
@@ -190,23 +190,23 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_crypto_candle_minute_past_data = PythonOperator(
-        task_id="get_crypto_candle_minute_past_data",
-        python_callable=_get_crypto_candle_minute_past_data,
-    )
-
-    # insert_from_cassandra_to_hive = PythonOperator(
-    #     task_id="insert_from_cassandra_to_hive",
-    #     python_callable=_insert_from_cassandra_to_hive,
+    # get_crypto_candle_minute_past_data = PythonOperator(
+    #     task_id="get_crypto_candle_minute_past_data",
+    #     python_callable=_get_crypto_candle_minute_past_data,
     # )
+
+    load_from_cassandra_to_hive = PythonOperator(
+        task_id="load_from_cassandra_to_hive",
+        python_callable=_load_from_cassandra_to_hive,
+    )
 
     dag_end = DummyOperator(task_id="dag_end")
 
     # (
     #     dag_start
     #     >> get_crypto_candle_minute_past_data
-    #     >> insert_from_cassandra_to_hive
+    #     >> load_from_cassandra_to_hive
     #     >> dag_end
     # )
 
-    (dag_start >> get_crypto_candle_minute_past_data >> dag_end)
+    (dag_start >> load_from_cassandra_to_hive >> dag_end)

@@ -183,7 +183,6 @@ def _load_from_cassandra_to_hive(query_file, days_delete_from):
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
-load_from_days = 7
 
 with DAG(
     dag_id,
@@ -198,18 +197,20 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
+    
+    days_delete_from = 7
 
     get_stock_index_value = PythonOperator(
         task_id="get_stock_index_value",
         python_callable=_get_stock_index_value,
-        op_kwargs={"load_from_days": load_from_days},
+        pool="yfinance_pool",
+        op_kwargs={"load_from_days": days_delete_from},
         do_xcom_push=True,
     )
 
     process_stock_index_value = PythonOperator(
         task_id="process_stock_index_value_for_ingestion",
         python_callable=_process_stock_index_value,
-        pool="yfinance_pool",
         do_xcom_push=True,
     )
 
@@ -229,7 +230,7 @@ with DAG(
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_001.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -238,7 +239,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_002.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -247,7 +248,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_003.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 

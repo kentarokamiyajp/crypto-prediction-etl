@@ -1,5 +1,6 @@
 DROP TABLE crypto.candles_minute_realtime;
 
+-- retention period: 864000 (10 days)
 CREATE TABLE IF NOT EXISTS crypto.candles_minute_realtime (
     id varchar,
     low float,
@@ -19,4 +20,4 @@ CREATE TABLE IF NOT EXISTS crypto.candles_minute_realtime (
     dt_insert_utc date,
     ts_insert_utc timestamp,
     PRIMARY KEY ((id,dt_insert_utc),startTime,closeTime)
-  ) WITH default_time_to_live = 7776000;
+  ) WITH default_time_to_live = 864000;

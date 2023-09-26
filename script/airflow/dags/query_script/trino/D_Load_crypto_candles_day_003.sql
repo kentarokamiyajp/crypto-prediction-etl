@@ -19,8 +19,7 @@ INSERT INTO
         ts_insert_utc,
         year,
         month,
-        day,
-        hour
+        day
     )
 SELECT
     id,
@@ -42,8 +41,7 @@ SELECT
     ts_insert_utc,
     year (from_unixtime (closeTime)),
     month (from_unixtime (closeTime)),
-    day (from_unixtime (closeTime)),
-    hour (from_unixtime (closeTime))
+    day (from_unixtime (closeTime))
 FROM
     cassandra.crypto.candles_day
 WHERE

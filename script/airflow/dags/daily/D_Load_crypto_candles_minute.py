@@ -196,7 +196,6 @@ def _load_from_cassandra_to_hive(query_file, days_delete_from):
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
-load_from_days = 7
 
 with DAG(
     dag_id,
@@ -211,11 +210,13 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
+    
+    days_delete_from = 7
 
     get_candle_data = PythonOperator(
         task_id="get_candle_minute_for_1day",
         python_callable=_get_candle_data,
-        op_kwargs={"load_from_days": load_from_days},
+        op_kwargs={"load_from_days": days_delete_from},
         pool="poloniex_pool",
         do_xcom_push=True,
     )
@@ -242,7 +243,7 @@ with DAG(
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -251,7 +252,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_002.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -260,7 +261,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_003.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 

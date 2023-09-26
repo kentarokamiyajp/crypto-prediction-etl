@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS crypto_raw.market_trade (
     price float COMMENT 'trade price',
     createTime bigint COMMENT 'time the trade was created',
     ts_send bigint COMMENT 'time the record was pushed',
-    dt date COMMENT 'date when the record was inserted to cassandra table in UTC time',
+    dt_insert_utc date COMMENT 'date when the record was inserted to cassandra table in UTC time',
     ts_insert_utc timestamp COMMENT 'timestamp when data was inserted to cassandra table'
 )
 COMMENT 'crypto candles data for each minute'
