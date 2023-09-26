@@ -91,17 +91,17 @@ def _insert_data_to_cassandra(ti):
 
     keyspace = "stock"
     table_name = "stock_index_day"
-    stock_index_value = ti.xcom_pull(task_ids="process_stock_index_value_for_ingestion")
+    batch_data = ti.xcom_pull(task_ids="process_stock_index_value_for_ingestion")
 
     query = f"""
-    INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,dt_unix,dt,tz_gmtoffset,ts_insert_utc)\
+    INSERT INTO {table_name} (id,low,high,open,close,volume,adjclose,currency,unixtime_create,dt_create_utc,tz_gmtoffset,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")
     logger.info(query)
 
-    cassandra_operation.insert_data(keyspace, stock_index_value, query)
+    cassandra_operation.insert_data(keyspace, batch_data, query)
 
 
 def _check_latest_dt():
@@ -117,7 +117,7 @@ def _check_latest_dt():
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
     query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_index}'
+    select count(*) from {table_name} where dt_create_utc = '{prev_date}' and id = '{target_index}'
     """
     count = cassandra_operation.check_latest_dt(keyspace, query).one()[0]
 
@@ -126,7 +126,7 @@ def _check_latest_dt():
 
     # If there is no data for prev-day even on the market holiday, exit with error.
     market = "NYSE"
-    if int(count) == 0 and utils.is_makert_open(prev_date, market):
+    if int(count) == 0 and utils.is_market_open(prev_date, market):
         warning_message = "There is no data for prev_date ({}, asset:{})".format(prev_date, target_index)
         logger.warn(warning_message)
         _send_warning_notification(warning_message)
@@ -183,7 +183,6 @@ def _load_from_cassandra_to_hive(query_file, days_delete_from):
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
-load_from_days = 7
 
 with DAG(
     dag_id,
@@ -198,18 +197,20 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
+    
+    days_delete_from = 7
 
     get_stock_index_value = PythonOperator(
         task_id="get_stock_index_value",
         python_callable=_get_stock_index_value,
-        op_kwargs={"load_from_days": load_from_days},
+        pool="yfinance_pool",
+        op_kwargs={"load_from_days": days_delete_from},
         do_xcom_push=True,
     )
 
     process_stock_index_value = PythonOperator(
         task_id="process_stock_index_value_for_ingestion",
         python_callable=_process_stock_index_value,
-        pool="yfinance_pool",
         do_xcom_push=True,
     )
 
@@ -218,7 +219,7 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
+    check_latest_dt = PythonOperator(task_id="check_latest_dt_existence", python_callable=_check_latest_dt)
 
     from airflow_modules import airflow_env_variables
 
@@ -229,7 +230,7 @@ with DAG(
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_001.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -238,7 +239,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_002.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -247,7 +248,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_stock_index_value_day_003.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 

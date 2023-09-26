@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS crypto_raw.order_book (
     order_rank int COMMENT 'rank of the order at the moment. If buy order, higher price is higher rank. If sell order, lower price is higher rank.',
     createTime bigint COMMENT 'time the record was created in the Poloniex system',
     ts_send bigint COMMENT 'unix timestamp when the record was created in UTC time',
-    dt date COMMENT 'date when the record was inserted to cassandra table in UTC time',
+    dt_insert_utc date COMMENT 'date when the record was inserted to cassandra table in UTC time',
     ts_insert_utc timestamp COMMENT 'timestamp when data was inserted to cassandra table'
 )
 COMMENT 'crypto candles data for each minute'

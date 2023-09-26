@@ -45,7 +45,7 @@ spark.sparkContext.setLogLevel("WARN")
 #############################################
 target_schema = "gas_raw"
 target_table = "natural_gas_price_day"
-query = f"select id, cast(dt as string) as dt, open, high, low, close, volume, \
+query = f"select id, cast(dt_create_utc as string) as dt, open, high, low, close, volume, \
     year, month, day from {target_schema}.{target_table}"
 natural_gas_price_raw_df = spark.sql(query)
 

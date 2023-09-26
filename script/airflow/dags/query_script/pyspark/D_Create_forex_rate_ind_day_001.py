@@ -51,8 +51,8 @@ target_table = "forex_rate_day"
 
 # Select data from <use_N_months_data_to_calculate_indicator> months ago to calculate the indicators.
 # As of 2023-08-11, only data from 3 months ago is enough for the calculation.
-query = f"select id, cast(dt as string) as dt, open, high, low, close, volume, year, month, day \
-    from {target_schema}.{target_table} where dt >= add_months(current_date,{use_N_months_data_to_calculate_indicator})"
+query = f"select id, cast(dt_create_utc as string) as dt, open, high, low, close, volume, year, month, day \
+    from {target_schema}.{target_table} where dt_create_utc >= add_months(current_date,{use_N_months_data_to_calculate_indicator})"
 forex_raw_df = spark.sql(query)
 
 # Select distinct symbols. (e.g., CL=F)

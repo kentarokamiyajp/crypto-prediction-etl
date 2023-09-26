@@ -23,7 +23,7 @@ def _send_warning_notification(optional_message=None):
     send_notification(dag_id, tags, "WARNING", optional_message)
 
 
-def _get_candle_data():
+def _get_candle_data(load_from_days):
     import time
     from airflow_modules import poloniex_operation
 
@@ -42,26 +42,26 @@ def _get_candle_data():
     ]
     interval = "DAY_1"
 
-    res = {}
-    days = 7  # how many days ago you want to get
+    candle_data = {}
+    days = load_from_days  # how many days ago you want to get
     period = 60 * 24 * days  # minute
     end = time.time()
     start = end - 60 * period
     for asset in assets:
         logger.info("{}: Load from {} to {}".format(asset, start, end))
-        res[asset] = poloniex_operation.get_candle_data(asset, interval, start, end)
+        candle_data[asset] = poloniex_operation.get_candle_data(asset, interval, start, end)
         time.sleep(10)
 
-    return res
+    return candle_data
 
 
 def _process_candle_data(ti):
     from airflow_modules import utils
 
     candle_data = ti.xcom_pull(task_ids="get_candle_day")
-    res = utils.process_candle_data_from_poloniex(candle_data)
+    batch_data = utils.process_candle_data_from_poloniex(candle_data)
 
-    return res
+    return batch_data
 
 
 def _insert_data_to_cassandra(ti):
@@ -69,18 +69,18 @@ def _insert_data_to_cassandra(ti):
 
     keyspace = "crypto"
     table_name = "candles_day"
-    candle_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
+    batch_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
 
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")
     logger.info(query)
 
-    cassandra_operation.insert_data(keyspace, candle_data, query)
+    cassandra_operation.insert_data(keyspace, batch_data, query)
 
 
 def _check_latest_dt():
@@ -94,7 +94,7 @@ def _check_latest_dt():
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
     query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_asset}'
+    select count(*) from {table_name} where dt_create_utc = '{prev_date}' and id = '{target_asset}'
     """
 
     logger.info("RUN QUERY")
@@ -175,10 +175,13 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
+    days_delete_from = 7
+
     get_candle_data = PythonOperator(
         task_id="get_candle_day",
         python_callable=_get_candle_data,
         pool="poloniex_pool",
+        op_kwargs={"load_from_days": days_delete_from},
         do_xcom_push=True,
     )
 
@@ -193,13 +196,11 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
+    check_latest_dt = PythonOperator(task_id="check_latest_dt_existence", python_callable=_check_latest_dt)
 
     from airflow_modules import airflow_env_variables
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
-
-    days_delete_from = 3
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",

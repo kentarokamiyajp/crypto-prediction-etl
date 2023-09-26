@@ -9,15 +9,15 @@ CREATE TABLE IF NOT EXISTS oil_raw.crude_oil_price_day (
     volume float COMMENT 'quote units traded over the day',
     adjclose float COMMENT 'adjusted price at the end time',
     currency string COMMENT 'currency of the price',
-    dt_unix bigint COMMENT 'unix timestamp on the market opend. this is not alwasy UTC.',
-    dt date COMMENT 'date market closed. this is not alwasy UTC.',
-    tz_gmtoffset int COMMENT 'GMT offset for dt and dt_unix',
+    unixtime_create bigint COMMENT 'unix timestamp on the market opened.',
+    dt_create_utc date COMMENT 'date when data was created in a trading system',
+    tz_gmtoffset int COMMENT 'GMT offset in seconds for dt_create_utc and unixtime_create',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
 )
 COMMENT 'oil price data for each day'
-PARTITIONED BY(year smallint COMMENT 'year at the market opening', 
-    month smallint COMMENT 'month at the market opening', 
-    day smallint COMMENT 'day at the market opening')
+PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system', 
+    month smallint COMMENT 'month data was created in a trading system', 
+    day smallint COMMENT 'day data was created in a trading system')
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
 STORED AS ORC

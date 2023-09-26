@@ -29,7 +29,7 @@ spark.sparkContext.setLogLevel("WARN")
 
 # Get crypto all historical data from hive RAW table
 crypto_raw_df = spark.sql(
-    f"select id, cast(dt as string) as dt, open, high, low, close, amount as volume from crypto_raw.candles_day where dt > '2022-01-01'"
+    f"select id, cast(dt_create_utc as string) as dt, open, high, low, close, amount as volume from crypto_raw.candles_day where dt > '2022-01-01'"
 )
 
 # Get distinct crypto symbols.

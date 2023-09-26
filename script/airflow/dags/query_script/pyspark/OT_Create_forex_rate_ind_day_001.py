@@ -45,7 +45,7 @@ spark.sparkContext.setLogLevel("WARN")
 #############################################
 target_schema = "forex_raw"
 target_table = "forex_rate_day"
-query = f"select id, cast(dt as string) as dt, open, high, low, close, volume, \
+query = f"select id, cast(dt_create_utc as string) as dt, open, high, low, close, volume, \
     year, month, day from {target_schema}.{target_table}"
 forex_rate_raw_df = spark.sql(query)
 

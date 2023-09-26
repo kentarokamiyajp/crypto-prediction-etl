@@ -105,13 +105,13 @@ def _get_crypto_candle_minute_past_data():
     table_name = "candles_minute"
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
     cassandra_operation.insert_data(keyspace, candle_data, query)
 
 
-def _insert_from_cassandra_to_hive():
+def _load_from_cassandra_to_hive():
     from airflow_modules import trino_operation
 
     # Delete all from hive
@@ -139,7 +139,7 @@ def _insert_from_cassandra_to_hive():
             interval_type,
             startTime,
             closeTime,
-            dt,
+            dt_create_utc,
             ts_insert_utc,
             year,
             month,
@@ -162,7 +162,7 @@ def _insert_from_cassandra_to_hive():
         interval,
         startTime,
         closeTime,
-        dt,
+        dt_create_utc,
         ts_insert_utc,
         year (from_unixtime (closeTime)),
         month (from_unixtime (closeTime)),
@@ -190,23 +190,23 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    get_crypto_candle_minute_past_data = PythonOperator(
-        task_id="get_crypto_candle_minute_past_data",
-        python_callable=_get_crypto_candle_minute_past_data,
-    )
-
-    # insert_from_cassandra_to_hive = PythonOperator(
-    #     task_id="insert_from_cassandra_to_hive",
-    #     python_callable=_insert_from_cassandra_to_hive,
+    # get_crypto_candle_minute_past_data = PythonOperator(
+    #     task_id="get_crypto_candle_minute_past_data",
+    #     python_callable=_get_crypto_candle_minute_past_data,
     # )
+
+    load_from_cassandra_to_hive = PythonOperator(
+        task_id="load_from_cassandra_to_hive",
+        python_callable=_load_from_cassandra_to_hive,
+    )
 
     dag_end = DummyOperator(task_id="dag_end")
 
     # (
     #     dag_start
     #     >> get_crypto_candle_minute_past_data
-    #     >> insert_from_cassandra_to_hive
+    #     >> load_from_cassandra_to_hive
     #     >> dag_end
     # )
 
-    (dag_start >> get_crypto_candle_minute_past_data >> dag_end)
+    (dag_start >> load_from_cassandra_to_hive >> dag_end)

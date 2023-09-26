@@ -15,7 +15,7 @@ INSERT INTO
         interval_type,
         startTime,
         closeTime,
-        dt,
+        dt_create_utc,
         ts_insert_utc,
         year,
         month,
@@ -38,7 +38,7 @@ SELECT
     interval,
     startTime,
     closeTime,
-    dt,
+    dt_create_utc,
     ts_insert_utc,
     year (from_unixtime (closeTime)),
     month (from_unixtime (closeTime)),
@@ -47,4 +47,4 @@ SELECT
 FROM
     cassandra.crypto.candles_minute
 WHERE
-    dt >= (date_add('day',${N},current_date))
+    dt_create_utc >= (date_add('day',${N},current_date))

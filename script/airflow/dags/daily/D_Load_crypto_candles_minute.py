@@ -53,7 +53,7 @@ def _get_candle_data(load_from_days):
     # Each GET request, only 500 records we can get.
     # This means data for 500 minutes per one request.
     # 1 day = 1440 minutes
-    res = {}
+    candle_data = {}
     window_size = 60 * 500  # Get data of <window_size> minutes for each time.
     curr_from_time = from_time
     curr_to_time = curr_from_time + window_size
@@ -66,10 +66,10 @@ def _get_candle_data(load_from_days):
                     logger.info("{}: Load from {} to {}".format(asset, curr_from_time, curr_to_time))
                     data = poloniex_operation.get_candle_data(asset, interval, curr_from_time, curr_to_time)
                     if data != None:
-                        if asset in res:
-                            res[asset].extend(data)
+                        if asset in candle_data:
+                            candle_data[asset].extend(data)
                         else:
-                            res[asset] = data
+                            candle_data[asset] = data
                     time.sleep(2)
                     break
                 except Exception as error:
@@ -87,16 +87,16 @@ def _get_candle_data(load_from_days):
         if curr_from_time > to_time:
             break
 
-    return res
+    return candle_data
 
 
 def _process_candle_data(ti):
     from airflow_modules import utils
 
-    candle_data = ti.xcom_pull(task_ids="get_candle_minite_for_1day")
-    res = utils.process_candle_data_from_poloniex(candle_data)
+    candle_data = ti.xcom_pull(task_ids="get_candle_minute_for_1day")
+    batch_data = utils.process_candle_data_from_poloniex(candle_data)
 
-    return res
+    return batch_data
 
 
 def _insert_data_to_cassandra(ti):
@@ -104,18 +104,18 @@ def _insert_data_to_cassandra(ti):
 
     keyspace = "crypto"
     table_name = "candles_minute"
-    candle_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
+    batch_data = ti.xcom_pull(task_ids="process_candle_data_for_ingestion")
 
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt,ts_insert_utc)\
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")
     logger.info(query)
 
-    cassandra_operation.insert_data(keyspace, candle_data, query)
+    cassandra_operation.insert_data(keyspace, batch_data, query)
 
 
 def _check_latest_dt():
@@ -129,7 +129,7 @@ def _check_latest_dt():
     prev_date = date(prev_date_ts.year, prev_date_ts.month, prev_date_ts.day).strftime("%Y-%m-%d")
 
     query = f"""
-    select count(*) from {table_name} where dt = '{prev_date}' and id = '{target_asset}'
+    select count(*) from {table_name} where dt_create_utc = '{prev_date}' and id = '{target_asset}'
     """
 
     logger.info("RUN QUERY")
@@ -196,7 +196,6 @@ def _load_from_cassandra_to_hive(query_file, days_delete_from):
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
-load_from_days = 7
 
 with DAG(
     dag_id,
@@ -211,11 +210,13 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
+    
+    days_delete_from = 7
 
     get_candle_data = PythonOperator(
-        task_id="get_candle_minite_for_1day",
+        task_id="get_candle_minute_for_1day",
         python_callable=_get_candle_data,
-        op_kwargs={"load_from_days": load_from_days},
+        op_kwargs={"load_from_days": days_delete_from},
         pool="poloniex_pool",
         do_xcom_push=True,
     )
@@ -231,7 +232,7 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existance", python_callable=_check_latest_dt)
+    check_latest_dt = PythonOperator(task_id="check_latest_dt_existence", python_callable=_check_latest_dt)
 
     from airflow_modules import airflow_env_variables
 
@@ -242,7 +243,7 @@ with DAG(
         python_callable=_delete_past_data_from_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_001.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -251,7 +252,7 @@ with DAG(
         python_callable=_hive_deletion_check,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_002.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 
@@ -260,7 +261,7 @@ with DAG(
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_candles_minute_003.sql",
-            "days_delete_from": load_from_days,
+            "days_delete_from": days_delete_from,
         },
     )
 

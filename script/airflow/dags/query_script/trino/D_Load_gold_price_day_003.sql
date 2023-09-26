@@ -8,8 +8,8 @@ INSERT INTO
         volume,
         adjclose,
         currency,
-        dt_unix,
-        dt,
+        unixtime_create,
+        dt_create_utc,
         tz_gmtoffset,
         ts_insert_utc,
         year,
@@ -25,14 +25,14 @@ SELECT
     volume,
     adjclose,
     currency,
-    dt_unix,
-    dt,
+    unixtime_create,
+    dt_create_utc,
     tz_gmtoffset,
     ts_insert_utc,
-    year (from_unixtime (dt_unix)),
-    month (from_unixtime (dt_unix)),
-    day (from_unixtime (dt_unix))
+    year (dt_create_utc),
+    month (dt_create_utc),
+    day (dt_create_utc)
 FROM
     cassandra.gold.gold_price_day
 WHERE
-    dt >= (date_add('day',${N},current_date))
+    dt_create_utc >= (date_add('day',${N},current_date))

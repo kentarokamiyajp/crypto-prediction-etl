@@ -31,10 +31,8 @@ def _get_ts_now(_timezone):
 
 
 def get_dt_from_unix_time(dt_unix_time):
-    dt_with_time = datetime.fromtimestamp(int(dt_unix_time))
-    dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime(
-        "%Y-%m-%d"
-    )
+    ts = datetime.fromtimestamp(int(dt_unix_time))
+    dt = date(ts.year, ts.month, ts.day).strftime("%Y-%m-%d")
     return dt
 
 
@@ -43,30 +41,28 @@ def process_candle_data_from_poloniex(data):
     batch_data = []
     for asset_name, asset_data in data.items():
         for d in asset_data:
-            dt_with_time = datetime.fromtimestamp(int(d[12]) / 1000.0)
-            dt = date(dt_with_time.year, dt_with_time.month, dt_with_time.day).strftime(
-                "%Y-%m-%d"
-            )
+            ts_create = datetime.fromtimestamp(int(d[12]) / 1000.0)
+            dt_create = date(ts_create.year, ts_create.month, ts_create.day).strftime("%Y-%m-%d")
             try:
                 batch_data.append(
                     [
-                        asset_name,
-                        float(d[0]),
-                        float(d[1]),
-                        float(d[2]),
-                        float(d[3]),
-                        float(d[4]),
-                        float(d[5]),
-                        float(d[6]),
-                        float(d[7]),
-                        int(d[8]),
-                        _unix_time_millisecond_to_second(d[9]),
-                        float(d[10]),
-                        d[11],
-                        _unix_time_millisecond_to_second(d[12]),
-                        _unix_time_millisecond_to_second(d[13]),
-                        dt,
-                        _get_ts_now(timezone),
+                        asset_name,  # id
+                        float(d[0]),  # low
+                        float(d[1]),  # high
+                        float(d[2]),  # open
+                        float(d[3]),  # close
+                        float(d[4]),  # amount
+                        float(d[5]),  # quantity
+                        float(d[6]),  # buyTakerAmount
+                        float(d[7]),  # buyTakerQuantity
+                        int(d[8]),  # tradeCount
+                        _unix_time_millisecond_to_second(d[9]),  # ts
+                        float(d[10]),  # weightedAverage
+                        d[11],  # interval
+                        _unix_time_millisecond_to_second(d[12]),  # startTime
+                        _unix_time_millisecond_to_second(d[13]),  # closeTime
+                        dt_create,  # dt_create_utc
+                        _get_ts_now(timezone),  # ts_insert_utc
                     ]
                 )
             except Exception as error:
@@ -89,18 +85,18 @@ def process_yahoofinancials_data(data):
                 if None not in list(p.values()):
                     batch_data.append(
                         [
-                            symbol_name,
-                            float(p["low"]),
-                            float(p["high"]),
-                            float(p["open"]),
-                            float(p["close"]),
-                            float(p["volume"]),
-                            float(p["adjclose"]),
-                            currency,
-                            int(p["date"]),
-                            p["formatted_date"],
-                            int(tz_gmtoffset),
-                            _get_ts_now(timezone),
+                            symbol_name,  # id
+                            float(p["low"]),  # low
+                            float(p["high"]),  # high
+                            float(p["open"]),  # open
+                            float(p["close"]),  # close
+                            float(p["volume"]),  # volume
+                            float(p["adjclose"]),  # adjclose
+                            currency,  # currency
+                            int(p["date"]),  # dt_unix
+                            p["formatted_date"],  # dt
+                            int(tz_gmtoffset),  # tz_gmtoffset
+                            _get_ts_now(timezone),  # ts_insert_utc
                         ]
                     )
                 else:
@@ -113,7 +109,7 @@ def process_yahoofinancials_data(data):
     return batch_data
 
 
-def is_makert_open(date, market):
+def is_market_open(date, market):
     calendar = mcal.get_calendar(market)
     if len(calendar.schedule(start_date=date, end_date=date).index) > 0:
         return True
