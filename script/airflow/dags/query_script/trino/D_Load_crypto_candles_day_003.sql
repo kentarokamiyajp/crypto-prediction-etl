@@ -16,6 +16,7 @@ INSERT INTO
         startTime,
         closeTime,
         dt_create_utc,
+        ts_create_utc,
         ts_insert_utc,
         year,
         month,
@@ -38,10 +39,11 @@ SELECT
     startTime,
     closeTime,
     dt_create_utc,
+    ts_create_utc,
     ts_insert_utc,
-    year (from_unixtime (closeTime)),
-    month (from_unixtime (closeTime)),
-    day (from_unixtime (closeTime))
+    year(ts_create_utc),
+    month(ts_create_utc),
+    day(ts_create_utc)
 FROM
     cassandra.crypto.candles_day
 WHERE

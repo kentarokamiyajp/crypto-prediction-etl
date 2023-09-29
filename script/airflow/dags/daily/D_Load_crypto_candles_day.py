@@ -50,7 +50,7 @@ def _get_candle_data(load_from_days):
     for asset in assets:
         logger.info("{}: Load from {} to {}".format(asset, start, end))
         candle_data[asset] = poloniex_operation.get_candle_data(asset, interval, start, end)
-        time.sleep(10)
+        time.sleep(1)
 
     return candle_data
 
@@ -73,8 +73,8 @@ def _insert_data_to_cassandra(ti):
 
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_create_utc,ts_insert_utc)\
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")

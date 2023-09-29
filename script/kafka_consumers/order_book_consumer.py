@@ -3,7 +3,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from cassandra_operations import cassandra_operator
 from common import utils
 import traceback
@@ -41,8 +41,8 @@ def main():
     table_name = os.environ.get("TABLE_NAME")
     cass_ope = cassandra_operator.Operator(keyspace)
     insert_query = f"""
-    INSERT INTO {table_name} (id,seqid,order_type,quote_price,base_amount,order_rank,createTime,ts_send,dt_insert_utc,ts_insert_utc) \
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    INSERT INTO {table_name} (id,seqid,order_type,quote_price,base_amount,order_rank,createTime,ts_send,dt_create_utc,ts_create_utc,ts_insert_utc) \
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     # Create consumer
@@ -72,6 +72,8 @@ def main():
                 ts_send = int(d["ts_send"])
                 asks = d["asks"]
                 bids = d["bids"]
+                ts_create_utc = datetime.utcfromtimestamp(int(d['createTime']))
+                dt_create_utc = date(ts_create_utc.year, ts_create_utc.month, ts_create_utc.day).strftime("%Y-%m-%d")
 
                 for order_type, orders in [["ask", asks], ["bid", bids]]:
                     batch_data = []
@@ -93,7 +95,8 @@ def main():
                                 order_rank,
                                 createTime,
                                 ts_send,
-                                datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                                dt_create_utc,
+                                str(ts_create_utc),
                                 datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
                             ]
                         )

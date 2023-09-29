@@ -8,7 +8,8 @@ INSERT INTO
         order_rank,
         createTime,
         ts_send,
-        dt_insert_utc,
+        dt_create_utc,
+        ts_create_utc,
         ts_insert_utc,
         year,
         month,
@@ -24,13 +25,14 @@ SELECT
     order_rank,
     createTime,
     ts_send,
-    dt_insert_utc,
+    dt_create_utc,
+    ts_create_utc,
     ts_insert_utc,
-    year (from_unixtime (ts_send)),
-    month (from_unixtime (ts_send)),
-    day (from_unixtime (ts_send)),
-    hour (from_unixtime (ts_send))
+    year(ts_create_utc),
+    month(ts_create_utc),
+    day(ts_create_utc),
+    hour(ts_create_utc)
 FROM
     cassandra.crypto.order_book_realtime
 WHERE
-    dt_insert_utc >= (date_add('day',${N},current_date))
+    dt_create_utc >= (date_add('day',${N},current_date))

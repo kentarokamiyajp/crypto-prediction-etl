@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS crypto.candles_minute (
     startTime bigint,
     closeTime bigint,
     dt_create_utc date,
+    ts_create_utc timestamp,
     ts_insert_utc timestamp,
     PRIMARY KEY ((id,dt_create_utc),startTime,closeTime)
   );

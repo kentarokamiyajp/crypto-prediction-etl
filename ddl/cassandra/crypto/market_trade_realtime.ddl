@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS crypto.market_trade_realtime (
     price float,
     createTime bigint,
     ts_send bigint,
-    dt_insert_utc date,
+    dt_create_utc date,
+    ts_create_utc timestamp,
     ts_insert_utc timestamp,
-    PRIMARY KEY ((id, dt_insert_utc),trade_id)
+    PRIMARY KEY ((id, dt_create_utc),trade_id)
 ) WITH default_time_to_live = 864000;
