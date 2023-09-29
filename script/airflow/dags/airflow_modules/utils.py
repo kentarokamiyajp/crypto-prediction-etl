@@ -31,7 +31,7 @@ def _get_ts_now(_timezone):
 
 
 def get_dt_from_unix_time(dt_unix_time):
-    ts = datetime.fromtimestamp(int(dt_unix_time))
+    ts = datetime.utcfromtimestamp(int(dt_unix_time))
     dt = date(ts.year, ts.month, ts.day).strftime("%Y-%m-%d")
     return dt
 
@@ -41,8 +41,8 @@ def process_candle_data_from_poloniex(data):
     batch_data = []
     for asset_name, asset_data in data.items():
         for d in asset_data:
-            ts_create = datetime.fromtimestamp(int(d[12]) / 1000.0)
-            dt_create = date(ts_create.year, ts_create.month, ts_create.day).strftime("%Y-%m-%d")
+            ts_create_utc = datetime.utcfromtimestamp(int(d[13]) / 1000.0)
+            dt_create_utc = date(ts_create_utc.year, ts_create_utc.month, ts_create_utc.day).strftime("%Y-%m-%d")
             try:
                 batch_data.append(
                     [
@@ -61,7 +61,8 @@ def process_candle_data_from_poloniex(data):
                         d[11],  # interval
                         _unix_time_millisecond_to_second(d[12]),  # startTime
                         _unix_time_millisecond_to_second(d[13]),  # closeTime
-                        dt_create,  # dt_create_utc
+                        dt_create_utc,  # dt_create_utc
+                        str(ts_create_utc),  # ts_create_utc
                         _get_ts_now(timezone),  # ts_insert_utc
                     ]
                 )

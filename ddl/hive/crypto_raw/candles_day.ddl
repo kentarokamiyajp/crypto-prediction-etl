@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS crypto_raw.candles_day (
     startTime bigint COMMENT 'start time of interval (utc unix timestamp market started)',
     closeTime bigint COMMENT 'close time of interval (utc unix timestamp market closed)',
     dt_create_utc date COMMENT 'date when data was created in a trading system',
+    ts_create_utc timestamp COMMENT 'timestamp when data was created in a trading system',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
 )
 COMMENT 'crypto candles data for each day'

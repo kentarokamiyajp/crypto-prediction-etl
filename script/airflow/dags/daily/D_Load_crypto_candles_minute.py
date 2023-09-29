@@ -70,7 +70,7 @@ def _get_candle_data(load_from_days):
                             candle_data[asset].extend(data)
                         else:
                             candle_data[asset] = data
-                    time.sleep(2)
+                    time.sleep(1)
                     break
                 except Exception as error:
                     logger.error("Error: {}".format(error))
@@ -108,8 +108,8 @@ def _insert_data_to_cassandra(ti):
 
     query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_insert_utc)\
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_create_utc,ts_insert_utc)\
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     logger.info("RUN QUERY")
