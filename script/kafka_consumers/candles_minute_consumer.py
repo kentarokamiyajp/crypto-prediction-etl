@@ -3,7 +3,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from cassandra_operations import cassandra_operator
 from common import utils
 import traceback
@@ -42,8 +42,8 @@ def main():
     cass_ope = cassandra_operator.Operator(keyspace)
     insert_query = f"""
     INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_insert_utc,ts_insert_utc)\
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_create_utc,ts_insert_utc)\
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     # Create consumer
@@ -68,6 +68,9 @@ def main():
 
             batch_data = []
             for d in consumed_data["data"]:
+                ts_create_utc = datetime.utcfromtimestamp(int(d['closeTime']))
+                dt_create_utc = date(ts_create_utc.year, ts_create_utc.month, ts_create_utc.day).strftime("%Y-%m-%d")
+                
                 batch_data.append(
                     [
                         d["id"],
@@ -85,7 +88,8 @@ def main():
                         d["interval"],
                         int(d["startTime"]),
                         int(d["closeTime"]),
-                        datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                        dt_create_utc,
+                        str(ts_create_utc),
                         datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
                     ]
                 )
