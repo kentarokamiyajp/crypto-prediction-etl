@@ -2,6 +2,11 @@
 ![Screenshot 2023-09-27 at 21 42 43](https://github.com/kamikennn/crypto_prediction_dwh/assets/45506894/8a1235a8-5f57-4efa-9d5f-53701bc2ebda)
 ## System Overview
 - https://miro.com/app/board/uXjVMgqA6r8=/?share_link_id=394438367657
+## Related Repositories
+- DevOps
+  - https://github.com/kamikennn/crypto_prediction_devops
+- ML/DL
+  - https://github.com/kamikennn/crypto_prediction_ml_dl
 ## Source of Crypto Price and Other Useful Data
 - Poloniex (https://api-docs.poloniex.com/spot)
   - Crypto price data
@@ -33,9 +38,3 @@
   - Trino
 ## Job Scheduling Tool
 - Airflow
-
-## Related Repositories
-- DevOps Repository
-  - https://github.com/kamikennn/crypto_prediction_devops
-- ML/DL Repository
-  - https://github.com/kamikennn/crypto_prediction_ml_dl
