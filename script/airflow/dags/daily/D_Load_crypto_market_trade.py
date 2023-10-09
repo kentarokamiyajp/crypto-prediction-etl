@@ -55,16 +55,19 @@ def _hive_deletion_check(query_file, days_delete_from):
         raise AirflowFailException(error_msg)
 
 
-def _load_from_cassandra_to_hive(query_file, days_delete_from):
+def _load_from_cassandra_to_hive(query_file, days_delete_from, symbols_to_load):
     from airflow_modules import trino_operation
 
     with open(query_file, "r") as f:
-        query = f.read()
+        _query = f.read()
 
-    query = query.replace("${N}", str(-days_delete_from))
-    logger.info("RUN QUERY")
-    logger.info(query)
-    trino_operation.run(query)
+    for symbol in symbols_to_load:
+        for day in range(0, days_delete_from+1):
+            query = _query.replace("${N}", str(-day))
+            query = query.replace("${symbol}", symbol)
+            logger.info("RUN QUERY")
+            logger.info(query)
+            trino_operation.run(query)
 
 
 args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
@@ -107,12 +110,14 @@ with DAG(
         },
     )
 
+    symbols_to_load = ['BTC_USDT']
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_market_trade_003.sql",
             "days_delete_from": days_delete_from,
+            "symbols_to_load":symbols_to_load,
         },
     )
 

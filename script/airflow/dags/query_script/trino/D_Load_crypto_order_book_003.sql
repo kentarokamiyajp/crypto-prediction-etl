@@ -35,4 +35,5 @@ SELECT
 FROM
     cassandra.crypto.order_book_realtime
 WHERE
-    dt_create_utc >= (date_add('day',${N},current_date))
+    id = '${symbol}'
+    and dt_create_utc = (date_add('day',${N},current_date))
