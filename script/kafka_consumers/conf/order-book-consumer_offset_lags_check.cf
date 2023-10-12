@@ -1,0 +1,7 @@
+# Topic id (comma separated if multiple topics exist)
+TOPIC_IDS="crypto.order_book"
+
+# Max acceptable offset lags
+MAX_OFFSET_LAGS=1000
+
+SLEEP_TIME=300
