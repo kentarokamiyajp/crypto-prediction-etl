@@ -1,0 +1,7 @@
+# Topic id (comma separated if multiple topics exist)
+TOPIC_IDS="crypto.market_trade"
+
+# Max acceptable offset lags
+MAX_OFFSET_LAGS=500
+
+SLEEP_TIME=300

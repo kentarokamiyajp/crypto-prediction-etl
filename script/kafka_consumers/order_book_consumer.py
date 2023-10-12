@@ -3,13 +3,13 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import time
+import traceback
+import pytz
+from consumer_operation import KafkaConsumer
+from dotenv import load_dotenv
 from datetime import datetime, timezone, date
 from cassandra_operations import cassandra_operator
 from common import utils
-import traceback
-from consumer_operation import KafkaConsumer
-import pytz
-from dotenv import load_dotenv
 
 CONF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "conf")
 

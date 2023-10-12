@@ -2,22 +2,22 @@
 
 #########################################
 #
-#   file name:  exec_producer.sh
-#   function:   Create a Kafka Producer and start producing.
-#   usage:      exec_producer.sh <producer_id>
-#   example:    sh exec_producer.sh candles_minute_producer
+#   file name:  main_offset_lags_check.sh
+#   function:   Check consumer offset lags.
+#   usage:      main_offset_lags_check.sh <consumer_goup_id>
+#   example:    sh main_offset_lags_check.sh order-book-consumer
 #
 #########################################
 
 if [ $# != 1 ]; then
     echo "##############################################"
     echo "Argments Eroor !!!"
-    echo "usage: exec_producer.sh <producer_id>"
+    echo "usage: main_offset_lags_check.sh <consumer_goup_id>"
     echo "##############################################"
     exit 1
 fi
 
-PRODUCER_ID=$1
+CONSUMER_GROUP_ID=$1
 
 DEFAULT_CONF="../common/default_conf.sh"
 if [ ! -f "$DEFAULT_CONF" ]; then
@@ -31,18 +31,15 @@ fi
 
 . $DEFAULT_CONF
 
-PRODUCER_CONF="./conf/${PRODUCER_ID}.cf"
+OFFSET_LAGS_CHECK_CONF="./conf/${CONSUMER_GROUP_ID}_offset_lags_check.cf"
 if [ ! -f "$DEFAULT_CONF" ]; then
     echo "##############################################"
-    echo "### READ Failded !!! ($PRODUCER_CONF)"
+    echo "### READ Failded !!! ($OFFSET_LAGS_CHECK_CONF)"
     echo "### Wrong working directory or file not found !!!"
     echo "### pwd: $(pwd)"
     echo "##############################################"
     exit 1
 fi
-
-. $PRODUCER_CONF
-
 
 # Logging setup
 DT_TODAY=$(TZ="Asia/Tokyo" date +'%Y%m%d')
@@ -59,33 +56,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-LOG_FILE=${LOGDIR}/${PRODUCER_ID}_${TS_NOW}.log
+LOG_FILE=${LOGDIR}/offset_lags_check_${CONSUMER_GROUP_ID}_${TS_NOW}.log
 
-# 1 day = 86400000ms
-RETENTION_MS=$((RETENTION_DAYS*86400000))
-SEGMENT_MS=86400000
-
-# Create a topic if not exist.
-kafka-topics.sh --bootstrap-server "${KAFKA_BOOTSTRAP_SERVERS}" \
-    --topic "${TOPIC_ID}" \
-    --create \
-    --partitions "${NUM_PARTITIONS}" \
-    --replication-factor "${REPLICATION_FOCTOR}" \
-    --if-not-exists \
-    --config retention.ms="${RETENTION_MS}"\
-    --config segment.ms="${SEGMENT_MS}"\
-    --config cleanup.policy="${CLEANUP_POLICY}"\
-    1>>$LOG_FILE 2>>$LOG_FILE
-
-if [ $? -ne 0 ]; then
-    echo "##############################################" >>$LOG_FILE
-    echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded to create a Kafka Producer !!!" >>$LOG_FILE
-    echo "##############################################" >>$LOG_FILE
-    exit 1
-fi
-
-# Start a producer
-MAIN_SCRIPT=./${PRODUCER_ID}.py
+# Start to check consumer lags
+MAIN_SCRIPT=./offset_lags_check.py
 if [ ! -f "$MAIN_SCRIPT" ]; then
     echo "##############################################"
     echo "### READ Failded !!! ($MAIN_SCRIPT)"
@@ -95,15 +69,15 @@ if [ ! -f "$MAIN_SCRIPT" ]; then
     exit 1
 fi
 
-python "${MAIN_SCRIPT}" "${DT_TODAY}" "${TS_NOW}" "${PRODUCER_ID}"  >> $LOG_FILE 2>&1 &
+python "${MAIN_SCRIPT}" "${DT_TODAY}" "${TS_NOW}" "${CONSUMER_GROUP_ID}" >> $LOG_FILE 2>&1 &
 
 if [ $? -ne 0 ]; then
     echo "##############################################" >>$LOG_FILE
-    echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded to start a Kafka Producer !!!" >>$LOG_FILE
+    echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded to start offset lags check !!!" >>$LOG_FILE
     echo "##############################################" >>$LOG_FILE
     exit 1
 fi
 
 echo "##############################################" >>$LOG_FILE
-echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Completed to start a Kafka Producer !!!" >>$LOG_FILE
+echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Completed to start offset lags check !!!" >>$LOG_FILE
 echo "##############################################" >>$LOG_FILE

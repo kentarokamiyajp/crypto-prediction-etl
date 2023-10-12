@@ -1,0 +1,7 @@
+# Topic id (comma separated if multiple topics exist)
+TOPIC_IDS="crypto.candles_minute"
+
+# Max acceptable offset lags
+MAX_OFFSET_LAGS=100
+
+SLEEP_TIME=300
