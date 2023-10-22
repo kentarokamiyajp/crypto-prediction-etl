@@ -43,7 +43,7 @@ with DAG(
     _poke_interval = 10
     _execution_delta = timedelta(minutes=10)
     _mode = "reschedule"
-    _timeout = 1800
+    _timeout = 3600
 
     with TaskGroup("wait_target_tasks", tooltip="Wait for the all load tasks finish") as wait_target_tasks:
         wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
