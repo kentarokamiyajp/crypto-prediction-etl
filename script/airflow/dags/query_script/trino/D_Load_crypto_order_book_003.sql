@@ -14,7 +14,9 @@ INSERT INTO
         year,
         month,
         day,
-        hour
+        hour,
+        minute,
+        second
     )
 SELECT
     id,
@@ -31,7 +33,9 @@ SELECT
     year(ts_create_utc),
     month(ts_create_utc),
     day(ts_create_utc),
-    hour(ts_create_utc)
+    hour(ts_create_utc),
+    minute(ts_create_utc),
+    second(ts_create_utc)
 FROM
     cassandra.crypto.order_book_realtime
 WHERE

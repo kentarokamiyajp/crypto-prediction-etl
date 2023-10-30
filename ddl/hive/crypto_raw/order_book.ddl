@@ -11,13 +11,15 @@ CREATE TABLE IF NOT EXISTS crypto_raw.order_book (
     ts_send bigint COMMENT 'unix timestamp when the record was created in UTC time',
     dt_create_utc date COMMENT 'date when the record was created in a trading system',
     ts_create_utc timestamp COMMENT 'timestamp when the record was created in a trading system',
-    ts_insert_utc timestamp COMMENT 'timestamp when data was inserted to cassandra table'
+    ts_insert_utc timestamp COMMENT 'timestamp when data was inserted to cassandra table',
+    minute smallint COMMENT 'minute at the order data was created',
+    second smallint COMMENT 'second at the order data was created'
 )
 COMMENT 'crypto candles data for each minute'
-PARTITIONED BY(year smallint COMMENT 'year at the order was posted', 
-    month smallint COMMENT 'month at the order was posted', 
-    day smallint COMMENT 'day at the order was posted', 
-    hour smallint COMMENT 'hour at the order was posted')
+PARTITIONED BY(year smallint COMMENT 'year at the order data was created', 
+    month smallint COMMENT 'month at the order data was created', 
+    day smallint COMMENT 'day at the order data was created', 
+    hour smallint COMMENT 'hour at the order data was created')
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
 STORED AS ORC
