@@ -41,9 +41,9 @@ def main():
     table_name = os.environ.get("TABLE_NAME")
     cass_ope = cassandra_operator.Operator(keyspace)
     insert_query = f"""
-    INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,buyTakerAmount,\
-        buyTakerQuantity,tradeCount,ts,weightedAverage,interval,startTime,closeTime,dt_create_utc,ts_create_utc,ts_insert_utc)\
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    INSERT INTO {table_name} (id,low,high,open,close,amount,quantity,\
+        tradeCount,startTime,closeTime,ts_send,dt_create_utc,ts_create_utc,ts_insert_utc)\
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     # Create consumer
@@ -80,14 +80,10 @@ def main():
                         float(d["close"]),
                         float(d["amount"]),
                         float(d["quantity"]),
-                        float(d["buyTakerAmount"]),
-                        float(d["buyTakerQuantity"]),
                         int(d["tradeCount"]),
-                        int(d["ts"]),
-                        float(d["weightedAverage"]),
-                        d["interval"],
                         int(d["startTime"]),
                         int(d["closeTime"]),
+                        int(d["ts_send"]),
                         dt_create_utc,
                         str(ts_create_utc),
                         datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),

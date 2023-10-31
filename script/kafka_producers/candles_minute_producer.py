@@ -4,12 +4,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import time
 from datetime import datetime, date
-from poloniex_apis import rest_api
+import threading
 from common import utils
 import traceback
-from producer_operation import KafkaProducer
 import pytz
 from dotenv import load_dotenv
+from poloniex_apis import websocket_api
 
 CONF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "conf")
 
@@ -21,6 +21,54 @@ TZ_JST = pytz.timezone("Asia/Tokyo")
 
 def _unix_time_millisecond_to_second(unix_time):
     return int((unix_time) / 1000.0)
+
+
+def process_websocket_response(response):
+    candle_data = {
+        "data": [
+            {
+                "id": data["symbol"],  # symbol name
+                "low":data["low"], # lowest price over the interval
+                "high":data["high"], # highest price over the interval
+                "open":data["open"], # price at the start time
+                "close":data["close"], # price at the end time
+                "amount":data["amount"], # quote units traded over the interval
+                "quantity":data["quantity"], # base units traded over the interval
+                "tradeCount":data["tradeCount"], # count of trades
+                "ts_send": _unix_time_millisecond_to_second(data["ts"]),  # send timestamp
+                "startTime": _unix_time_millisecond_to_second(data["startTime"]), # start time of interval
+                "closeTime": _unix_time_millisecond_to_second(data["closeTime"]), # close time of interval
+            }
+            for data in response["data"]
+        ]
+    }
+    return candle_data
+
+
+def _start_procedure(producer_id, connection_type, request_data, send_kafka, kafka_config):
+    polo_ws_operator = websocket_api.PoloniexSocketOperator(connection_type, request_data, send_kafka, kafka_config)
+
+    retry_count = 0
+    max_retry_count = int(os.environ.get("RETRY_COUNT"))
+    try:
+        while True:
+            try:
+                polo_ws_operator.run_forever()
+            except Exception as error:
+                polo_ws_operator.kafka_producer.logger.warning(f"API ERROR: Could not get candle minute data ({error})")
+                polo_ws_operator.kafka_producer.logger.warning(f"Retry Request: {retry_count}")
+                polo_ws_operator.kafka_producer.logger.warning(traceback.format_exc())
+                if retry_count > max_retry_count:
+                    break
+                retry_count += 1
+                time.sleep(60)
+
+    except Exception as error:
+        ts_now = datetime.now(TZ_JST).strftime("%Y-%m-%d %H:%M:%S")
+        message = f"{ts_now} [Failed] Kafka producer: {producer_id}.py (exceeded max retry count)"
+        utils.send_line_message(message)
+        polo_ws_operator.kafka_producer.logger.error(f"An exception occurred: {error}")
+        polo_ws_operator.kafka_producer.logger.error(traceback.format_exc())
 
 
 def main():
@@ -37,70 +85,43 @@ def main():
     num_partitions = os.environ.get("NUM_PARTITIONS")
     topic_id = os.environ.get("TOPIC_ID")
     symbols = os.environ.get("SYMBOLS").split(",")
-    interval = os.environ.get("INTERVAL")
-    period = os.environ.get("PERIOD")
+    
+    for symbol in symbols:
+        subscribe_payload = {
+            "event": "subscribe",
+            "channel": ["candles_minute_1"],
+            "symbols": [symbol],
+        }
 
-    # Create kafka producer instance with logging.
-    kafka_producer = KafkaProducer(curr_date, curr_timestamp, producer_id)
+        ping_payload = {"event": "ping"}
 
-    # Create Poloniex operator to get crypto price values via REST API.
-    polo_api_operator = rest_api.PoloniexOperator()
+        # Create Poloniex WebSocket operator
+        connection_type = "public"
+        request_data = {
+            "subscribe_payload": json.dumps(subscribe_payload),
+            "ping_payload": json.dumps(ping_payload),
+        }
+        send_kafka = True
+        kafka_config = {
+            "curr_date": curr_date,
+            "curr_timestamp": curr_timestamp,
+            "producer_id": producer_id,
+            "topic_id": topic_id,
+            "num_partitions": num_partitions,
+            "func_process_response": process_websocket_response,
+        }
 
-    retry_count = 0
-    max_retry_count = int(os.environ.get("RETRY_COUNT"))
-    try:
-        while True:
-            for symbol in symbols:
-                try:
-                    end = time.time()
-                    start = end - 60 * int(period)
-                    raw_candle_data = polo_api_operator.get_candles(symbol, interval, start, end)
-                    retry_count = 0
-                except Exception as error:
-                    retry_count += 1
-                    kafka_producer.logger.warning(f"API ERROR: Could not get candle data ({error})")
-                    kafka_producer.logger.warning(f"Retry Request: {retry_count}")
-                    kafka_producer.logger.warning(traceback.format_exc())
-                    if retry_count == max_retry_count:
-                        ts_now = datetime.now(TZ_JST).strftime("%Y-%m-%d %H:%M:%S")
-                        message = f"{ts_now} [Failed] Kafka producer: {producer_id}.py (exceeded max retry count)"
-                        utils.send_line_message(message)
-                        break
-                    time.sleep(600)
-
-                candle_data = {
-                    "data": [
-                        {
-                            "id": symbol,
-                            "low": data[0],
-                            "high": data[1],
-                            "open": data[2],
-                            "close": data[3],
-                            "amount": data[4],
-                            "quantity": data[5],
-                            "buyTakerAmount": data[6],
-                            "buyTakerQuantity": data[7],
-                            "tradeCount": data[8],
-                            "ts": _unix_time_millisecond_to_second(data[9]),
-                            "weightedAverage": data[10],
-                            "interval": data[11],
-                            "startTime": _unix_time_millisecond_to_second(data[12]),
-                            "closeTime": _unix_time_millisecond_to_second(data[13]),
-                        }
-                        for data in raw_candle_data
-                    ]
-                }
-
-                kafka_producer.produce_message(topic_id, json.dumps(candle_data), int(num_partitions))
-                kafka_producer.poll_message(timeout=10)
-                time.sleep(10)
-
-    except Exception as error:
-        ts_now = datetime.now(TZ_JST).strftime("%Y-%m-%d %H:%M:%S")
-        message = f"{ts_now} [Failed] Kafka producer: {producer_id}.py (unknown error)"
-        utils.send_line_message(message)
-        kafka_producer.logger.error(f"An exception occurred: {error}")
-        kafka_producer.logger.error(traceback.format_exc())
+        thread = threading.Thread(
+            target=_start_procedure,
+            args=(
+                producer_id,
+                connection_type,
+                request_data,
+                send_kafka,
+                kafka_config,
+            ),
+        )
+        thread.start()
 
 
 if __name__ == "__main__":

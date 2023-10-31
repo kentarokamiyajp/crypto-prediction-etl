@@ -9,16 +9,12 @@ CREATE TABLE IF NOT EXISTS crypto.candles_minute_realtime (
     close float,
     amount float,
     quantity float,
-    buyTakerAmount float,
-    buyTakerQuantity float,
     tradeCount int,
-    ts bigint,
-    weightedAverage float,
-    interval varchar,
     startTime bigint,
     closeTime bigint,
+    ts_send bigint,
     dt_create_utc date,
     ts_create_utc timestamp,
     ts_insert_utc timestamp,
-    PRIMARY KEY ((id,dt_create_utc),startTime,closeTime)
+    PRIMARY KEY ((id,dt_create_utc),startTime)
   ) WITH default_time_to_live = 864000;

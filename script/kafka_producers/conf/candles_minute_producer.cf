@@ -8,10 +8,6 @@ TOPIC_ID="crypto.candles_minute"
 # Candle data config
 # Target symbols
 SYMBOLS="BTC_USDT,ETH_USDT"
-# MINUTE_1: get candle data every minute
-INTERVAL="MINUTE_1"
-# Get data from <period> minutes ago to the current time.
-PERIOD=5
 
 # Set max retry count for websocket function
 RETRY_COUNT=5
