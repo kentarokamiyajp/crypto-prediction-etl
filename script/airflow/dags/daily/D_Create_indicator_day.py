@@ -78,7 +78,7 @@ with DAG(
     _poke_interval = 10
     _execution_delta = timedelta(minutes=5)
     _mode = "reschedule"
-    _timeout = 1800
+    _timeout = 7200
 
     with TaskGroup("wait_prev_task_section", tooltip="Wait for previous tasks finish") as wait_prev_tasks:
         wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
