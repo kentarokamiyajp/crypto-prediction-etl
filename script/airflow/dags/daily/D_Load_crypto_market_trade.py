@@ -110,7 +110,7 @@ with DAG(
         },
     )
 
-    symbols_to_load = ['BTC_USDT']
+    symbols_to_load = ['BTC_USDT','ETH_USDT']
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
