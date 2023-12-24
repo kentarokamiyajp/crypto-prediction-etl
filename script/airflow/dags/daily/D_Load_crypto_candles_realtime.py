@@ -90,7 +90,7 @@ with DAG(
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
-    days_delete_from = 10
+    days_delete_from = 2
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",
