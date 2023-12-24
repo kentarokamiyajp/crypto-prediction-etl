@@ -68,7 +68,7 @@ def main():
 
             batch_data = []
             for d in consumed_data["data"]:
-                ts_create_utc = datetime.utcfromtimestamp(int(d['closeTime']))
+                ts_create_utc = datetime.utcfromtimestamp(int(d['ts_send']))
                 dt_create_utc = date(ts_create_utc.year, ts_create_utc.month, ts_create_utc.day).strftime("%Y-%m-%d")
                 
                 batch_data.append(

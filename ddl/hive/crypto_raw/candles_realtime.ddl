@@ -1,6 +1,6 @@
-DROP TABLE crypto_raw.candles_minute;
+DROP TABLE crypto_raw.candles_realtime;
 
-CREATE TABLE IF NOT EXISTS crypto_raw.candles_minute (
+CREATE TABLE IF NOT EXISTS crypto_raw.candles_realtime (
     id string COMMENT 'id of the crypto currency',
     low float COMMENT 'lowest price over the interval',
     high float COMMENT 'highest price over the interval',
@@ -8,17 +8,15 @@ CREATE TABLE IF NOT EXISTS crypto_raw.candles_minute (
     close float COMMENT 'price at the end time',
     amount float COMMENT 'quote(e.g., USDT) units traded over the interval',
     quantity float COMMENT 'base(e.g., BTC) units traded over the interval',
-    buyTakerAmount float COMMENT 'quote units traded over the interval filled by market buy orders',
-    buyTakerQuantity float COMMENT 'base units traded over the interval filled by market buy orders',
     tradeCount int COMMENT 'count of trades',
-    ts bigint COMMENT 'time the record was pushed',
-    weightedAverage float COMMENT 'weighted average over the interval',
-    interval_type string COMMENT 'the unit of time to aggregate data by. E.g., MINUTE_1, HOUR_1, DAY_1, WEEK_1 and MONTH_1',
     startTime bigint COMMENT 'start time of interval (utc unix timestamp market started)',
     closeTime bigint COMMENT 'close time of interval (utc unix timestamp market closed)',
-    dt_create_utc date COMMENT 'date when data was created in a trading system (based on closeTime)',
-    ts_create_utc timestamp COMMENT 'timestamp when data was created in a trading system (based on closeTime)',
-    ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
+    ts_send bigint COMMENT 'time the record was pushed',
+    dt_create_utc date COMMENT 'date when data was created in a trading system (based on ts_send)',
+    ts_create_utc timestamp COMMENT 'timestamp when data was created in a trading system (based on ts_send)',
+    ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra',
+    minute smallint COMMENT 'minute at the candle data was created',
+    second smallint COMMENT 'second at the candle data was created'
 )
 COMMENT 'crypto candles data for each minute'
 PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system', 

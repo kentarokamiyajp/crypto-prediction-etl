@@ -1,0 +1,49 @@
+INSERT INTO
+    hive.crypto_raw.candles_realtime (
+        id,
+        low,
+        high,
+        open,
+        close,
+        amount,
+        quantity,
+        tradeCount,
+        startTime,
+        closeTime,
+        ts_send,
+        dt_create_utc,
+        ts_create_utc,
+        ts_insert_utc,
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second
+    )
+SELECT
+    id,
+    low,
+    high,
+    open,
+    close,
+    amount,
+    quantity,
+    tradeCount,
+    startTime,
+    closeTime,
+    ts_send,
+    dt_create_utc,
+    ts_create_utc,
+    ts_insert_utc,
+    year(ts_create_utc),
+    month(ts_create_utc),
+    day(ts_create_utc),
+    hour(ts_create_utc),
+    minute(ts_create_utc),
+    second(ts_create_utc)
+FROM
+    cassandra.crypto.candles_realtime
+WHERE
+    id = '${symbol}'
+    and dt_create_utc = (date_add('day',${N},current_date))
