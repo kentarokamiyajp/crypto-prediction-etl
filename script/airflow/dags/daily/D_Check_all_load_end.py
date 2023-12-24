@@ -182,6 +182,7 @@ with DAG(
             wait_for_D_Load_crypto_candles_minute,
             wait_for_D_Load_crypto_market_trade,
             wait_for_D_Load_crypto_order_book,
+            wait_for_D_Load_crypto_candles_realtime,
             wait_for_D_Load_forex_rate_day,
             wait_for_D_Load_gold_price_day,
             wait_for_D_Load_natural_gas_price_day,
