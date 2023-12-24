@@ -1,0 +1,11 @@
+# Kafka Consumer config
+TOPIC_ID="crypto.candles_minute"
+GROUP_ID="candles-realtime-consumer"
+OFFSET_TYPE="earliest"
+
+# Cassandra config
+KEYSPACE="crypto"
+TABLE_NAME="candles_realtime"
+
+# Set max retry count for cassandra operation
+RETRY_COUNT=5
