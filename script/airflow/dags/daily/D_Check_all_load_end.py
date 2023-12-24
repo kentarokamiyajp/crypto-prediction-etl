@@ -110,6 +110,19 @@ with DAG(
             mode=_mode,
             timeout=_timeout,
         )
+        
+        wait_for_D_Load_crypto_candles_realtime = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_candles_realtime",
+            external_dag_id="D_Load_crypto_candles_realtime",
+            external_task_id="dag_end",
+            allowed_states=_allowed_states,
+            failed_states=_failed_states,
+            check_existence=_check_existence,
+            poke_interval=_poke_interval,
+            execution_delta=_execution_delta,
+            mode=_mode,
+            timeout=_timeout,
+        )
 
         wait_for_D_Load_forex_rate_day = ExternalTaskSensor(
             task_id="wait_for_D_Load_forex_rate_day",
