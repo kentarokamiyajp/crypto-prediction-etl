@@ -15,14 +15,14 @@ CREATE TABLE IF NOT EXISTS crypto_raw.candles_realtime (
     dt_create_utc date COMMENT 'date when data was created in a trading system (based on ts_send)',
     ts_create_utc timestamp COMMENT 'timestamp when data was created in a trading system (based on ts_send)',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra',
-    minute smallint COMMENT 'minute at the candle data was created',
-    second smallint COMMENT 'second at the candle data was created'
+    minute smallint COMMENT 'minute at the candle data was created (based on ts_send)',
+    second smallint COMMENT 'second at the candle data was created (based on ts_send)'
 )
 COMMENT 'crypto candles data for each minute'
-PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system', 
-    month smallint COMMENT 'month data was created in a trading system', 
-    day smallint COMMENT 'day data was created in a trading system', 
-    hour smallint COMMENT 'hour data was created in a trading system')
+PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system (based on ts_send)',
+    month smallint COMMENT 'month data was created in a trading system (based on ts_send)',
+    day smallint COMMENT 'day data was created in a trading system (based on ts_send)',
+    hour smallint COMMENT 'hour data was created in a trading system (based on ts_send)')
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
 STORED AS ORC
