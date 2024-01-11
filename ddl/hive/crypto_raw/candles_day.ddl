@@ -16,14 +16,14 @@ CREATE TABLE IF NOT EXISTS crypto_raw.candles_day (
     interval_type string COMMENT 'the unit of time to aggregate data by. E.g., MINUTE_1, HOUR_1, DAY_1, WEEK_1 and MONTH_1',
     startTime bigint COMMENT 'start time of interval (utc unix timestamp market started)',
     closeTime bigint COMMENT 'close time of interval (utc unix timestamp market closed)',
-    dt_create_utc date COMMENT 'date when data was created in a trading system',
-    ts_create_utc timestamp COMMENT 'timestamp when data was created in a trading system',
+    dt_create_utc date COMMENT 'date when data was created in a trading system (based on closeTime)',
+    ts_create_utc timestamp COMMENT 'timestamp when data was created in a trading system (based on closeTime)',
     ts_insert_utc timestamp COMMENT 'timestamp when data is inserted to table in cassandra'
 )
 COMMENT 'crypto candles data for each day'
-PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system', 
-    month smallint COMMENT 'month data was created in a trading system', 
-    day smallint COMMENT 'day data was created in a trading system')
+PARTITIONED BY(year smallint COMMENT 'year data was created in a trading system (based on closeTime)',
+    month smallint COMMENT 'month data was created in a trading system (based on closeTime)',
+    day smallint COMMENT 'day data was created in a trading system (based on closeTime)')
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
 STORED AS ORC
