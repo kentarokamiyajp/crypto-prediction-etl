@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: stg_stock_raw__stock_index_day
+    description: "view of source table"

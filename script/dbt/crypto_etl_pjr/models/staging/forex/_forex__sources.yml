@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: forex_raw
+    database: hive
+    schema: forex_raw
+    tables:
+      - name: forex_rate_day

@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: stg_forex_raw__forex_rate_day
+    description: "view of source raw table"

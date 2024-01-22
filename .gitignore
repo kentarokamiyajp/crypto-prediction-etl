@@ -16,3 +16,9 @@ script/local_executions/*
 script/manual_operations/*
 script/kafka_producers/__pycache__/*
 script/kafka_consumers/__pycache__/*
+script/dbt/logs/*
+script/dbt/target/*
+script/dbt/dbt_packages/*
+script/dbt/.user.yml
+script/dbt/crypto_etl_pjr/logs/*
+script/dbt/crypto_etl_pjr/target/*
