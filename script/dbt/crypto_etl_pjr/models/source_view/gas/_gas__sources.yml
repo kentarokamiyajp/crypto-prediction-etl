@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: gas_raw
+    database: hive
+    schema: gas_raw
+    tables:
+      - name: natural_gas_price_day
