@@ -11,29 +11,29 @@ profile_dir=/home/git/crypto_prediction_dwh/script/dbt/crypto_etl_pjr
 target="dev"
 
 
-############
+# ###########
 # Debug
-############
-# echo "running dbt debug ..."
-# dbt debug --profiles-dir ${profile_dir}
-# echo "FInished dbt debug !!!"
+# ###########
+echo "running dbt debug ..."
+dbt debug --profiles-dir ${profile_dir}
+echo "FInished dbt debug !!!"
 
 
 ############
 # RUN
 ############
-# echo "running dbt run ..."
+echo "running dbt run ..."
 
-# # create source views
-# profile="cross_use"
-# model="source_view"
-# dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
+# create source views
+profile="cross_use"
+model="source_view"
+dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
 
-# profile="cross_use"
-# model="example"
-# dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
+profile="cross_use"
+model="example"
+dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
 
-# echo "Finishied dbt run !!!"
+echo "Finishied dbt run !!!"
 
 ############
 # TEST
@@ -44,7 +44,6 @@ echo "running dbt test ..."
 profile="cross_use"
 model="source_view"
 dbt test --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
-
 
 echo "Finishied dbt test !!!"
 
