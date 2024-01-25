@@ -33,5 +33,5 @@ models:
   crypto_etl_pjr:
     example:
       +materialized: table
-    staging:
+    source_view:
       +materialized: view
