@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_stock_raw__stock_index_day
+  - name: src_stock_raw__stock_index_day
     description: "view of source table"
     columns:
       - name: id

@@ -1,13 +1,13 @@
 version: 2
 
 models:
-  - name: stg_crypto_raw__candles_day
+  - name: src_crypto_raw__candles_day
     description: "view of source raw table"
-  - name: stg_crypto_raw__candles_minute
+  - name: src_crypto_raw__candles_minute
     description: "view of source raw table"
-  - name: stg_crypto_raw__candles_realtime
+  - name: src_crypto_raw__candles_realtime
     description: "view of source raw table"
-  - name: stg_crypto_raw__market_trade
+  - name: src_crypto_raw__market_trade
     description: "view of source raw table"
-  - name: stg_crypto_raw__order_book
+  - name: src_crypto_raw__order_book
     description: "view of source raw table"

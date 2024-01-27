@@ -1,5 +1,5 @@
 version: 2
 
 models:
-  - name: stg_gas_raw__natural_gas_price_day
+  - name: src_gas_raw__natural_gas_price_day
     description: "view of source table"

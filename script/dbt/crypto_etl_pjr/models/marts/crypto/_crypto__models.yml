@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: crypto_daily_stats
+    description: "view of source raw table"
