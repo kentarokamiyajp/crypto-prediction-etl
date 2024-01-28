@@ -58,7 +58,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Create mart tables for crude oil price indicators",
-    schedule_interval="5 1 * * *",
+    schedule_interval="15 1 * * *",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -80,93 +80,18 @@ with DAG(
     _mode = "reschedule"
     _timeout = 7200
 
-    with TaskGroup("wait_prev_task_section", tooltip="Wait for previous tasks finish") as wait_prev_tasks:
-        wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_crude_oil_price_day",
-            external_dag_id="D_Load_crude_oil_price_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_crypto_candles_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_crypto_candles_day",
-            external_dag_id="D_Load_crypto_candles_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_forex_rate_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_forex_rate_day",
-            external_dag_id="D_Load_forex_rate_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_gold_price_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_gold_price_day",
-            external_dag_id="D_Load_gold_price_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_natural_gas_price_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_natural_gas_price_day",
-            external_dag_id="D_Load_natural_gas_price_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_stock_index_value_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_stock_index_value_day",
-            external_dag_id="D_Load_stock_index_value_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        [
-            wait_for_D_Load_crude_oil_price_day,
-            wait_for_D_Load_crypto_candles_day,
-            wait_for_D_Load_forex_rate_day,
-            wait_for_D_Load_gold_price_day,
-            wait_for_D_Load_natural_gas_price_day,
-            wait_for_D_Load_stock_index_value_day,
-        ]
+    wait_prev_tasks = ExternalTaskSensor(
+        task_id="wait_prev_tasks",
+        external_dag_id="D_Check_trunk_load_end",
+        external_task_id="dag_end",
+        allowed_states=_allowed_states,
+        failed_states=_failed_states,
+        check_existence=_check_existence,
+        poke_interval=_poke_interval,
+        execution_delta=_execution_delta,
+        mode=_mode,
+        timeout=_timeout,
+    )
 
     ##############################################
     # Task Group to create indicator for each feature
