@@ -1,12 +1,15 @@
 {{
     config(
         materialized = 'incremental',
-        unique_key = ['symbol_id', 'dt_start', 'dt_end'],
-        cluster_by = ['symbol_id'],  
         on_schema_change='append_new_columns',
-        incremental_strategy = 'append'
+        incremental_strategy = 'append',
+        delete_days,
+        delete_days= 7
     )
+
 }}
+
+{% do trino_delete_records(config.get('delete_key'), config.get('delete_days')) %}
 
 with 
     min_max_dt as (
@@ -14,7 +17,7 @@ with
             min(dt_create_utc) as min_dt,
             max(dt_create_utc) as max_dt
         from
-            hive.crypto_raw.candles_day
+            {{ ref('src_crypto_raw__candles_day') }}
     ),
     close_stats_1 as (
         select
@@ -33,8 +36,8 @@ with
             localtimestamp(3) as ts_created,
             localtimestamp(3) as ts_updated
         from
-            hive.dev_crypto_mart.calendar as calendar
-        left outer join hive.crypto_raw.candles_day as base
+            {{ ref('calendar') }} as calendar
+        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -57,8 +60,8 @@ with
             localtimestamp(3) as ts_created,
             localtimestamp(3) as ts_updated
         from
-            hive.dev_crypto_mart.calendar as calendar
-        left outer join hive.crypto_raw.candles_day as base
+            {{ ref('calendar') }} as calendar
+        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -81,8 +84,8 @@ with
             localtimestamp(3) as ts_created,
             localtimestamp(3) as ts_updated
         from
-            hive.dev_crypto_mart.calendar as calendar
-        left outer join hive.crypto_raw.candles_day as base
+            {{ ref('calendar') }} as calendar
+        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -105,8 +108,8 @@ with
             localtimestamp(3) as ts_created,
             localtimestamp(3) as ts_updated
         from
-            hive.dev_crypto_mart.calendar as calendar
-        left outer join hive.crypto_raw.candles_day as base
+            {{ ref('calendar') }} as calendar
+        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -129,8 +132,8 @@ with
             localtimestamp(3) as ts_created,
             localtimestamp(3) as ts_updated
         from
-            hive.dev_crypto_mart.calendar as calendar
-        left outer join hive.crypto_raw.candles_day as base
+            {{ ref('calendar') }} as calendar
+        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -153,8 +156,8 @@ with
             localtimestamp(3) as ts_created,
             localtimestamp(3) as ts_updated
         from
-            hive.dev_crypto_mart.calendar as calendar
-        left outer join hive.crypto_raw.candles_day as base
+            {{ ref('calendar') }} as calendar
+        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -179,6 +182,6 @@ with
         from
             tmp_crypto_daily_close_stats
         where
-            dt_end >= date_add('day', -7, current_date)
+            dt_end >= date_add('day', {{ config.get('delete_days') }}, current_date)
     )
 select * from crypto_daily_close_stats
