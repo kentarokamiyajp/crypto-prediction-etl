@@ -48,5 +48,17 @@ dbt test --profiles-dir ${profile_dir} --target ${target} --profile ${profile} -
 echo "Finishied dbt test !!!"
 
 
+############
+# Update Docs
+############
+echo "generating docs ..."
+
+profile="cross_use"
+model="source_view"
+dbt docs generate --profiles-dir ${profile_dir} --target ${target} --profile ${profile}
+
+echo "Finishied generating docs !!!"
+
+
 # Deactivate
 deactivate

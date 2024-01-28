@@ -3,8 +3,8 @@
         materialized = 'incremental',
         on_schema_change='append_new_columns',
         incremental_strategy = 'append',
-        delete_days,
-        delete_days= 7
+        delete_key = 'dt_end',
+        delete_days= 7,
     )
 
 }}
