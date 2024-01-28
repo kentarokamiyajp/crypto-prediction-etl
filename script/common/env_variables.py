@@ -46,3 +46,7 @@ HISTORY_LOG_HOME = os.environ.get("HISTORY_LOG_HOME")
 
 AIRFLOW_EXEC_USER = os.environ.get("AIRFLOW_EXEC_USER")
 AIRFLOW_PRIVATE_KEY = os.environ.get("AIRFLOW_PRIVATE_KEY")
+
+DBT_HOST = os.environ.get("DBT_HOST")
+DBT_USER = os.environ.get("DBT_USER")
+DBT_PROJECT_HOME = os.environ.get("DBT_PROJECT_HOME")
