@@ -60,7 +60,7 @@ echo "Running dbt run ..."
 
 # create source views
 profile="crypto_mart"
-model="source_view"
+model="crypto"
 dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
 exec_status=$?
 if [ ${exec_status} != 0 ]; then
@@ -78,7 +78,7 @@ echo "Running dbt test ..."
 
 # create source views
 profile="crypto_mart"
-model="source_view"
+model="crypto"
 dbt test --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
 if [ ${exec_status} != 0 ]; then
     echo "DBT TEST Failed !!!"
@@ -94,9 +94,7 @@ echo "Finishied dbt test !!!"
 ###############
 echo "Generating docs ..."
 
-profile="crypto_mart"
-model="source_view"
-dbt docs generate --profiles-dir ${profile_dir} --target ${target} --profile ${profile}
+dbt docs generate --profiles-dir ${profile_dir} --target ${target}
 if [ ${exec_status} != 0 ]; then
     echo "DBT DOCS Failed !!!"
     echo "Failed command: 'dbt docs generate --profiles-dir ${profile_dir} --target ${target} --profile ${profile}"

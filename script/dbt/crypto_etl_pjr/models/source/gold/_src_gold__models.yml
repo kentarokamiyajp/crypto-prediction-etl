@@ -1,5 +1,0 @@
-version: 2
-
-models:
-  - name: src_gold_raw__gold_price_day
-    description: "view of source table"

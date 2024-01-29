@@ -1,5 +1,0 @@
-version: 2
-
-models:
-  - name: src_oil_raw__crude_oil_price_day
-    description: "view of source table"

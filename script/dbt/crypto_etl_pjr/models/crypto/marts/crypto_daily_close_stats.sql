@@ -17,7 +17,7 @@ with
             min(dt_create_utc) as min_dt,
             max(dt_create_utc) as max_dt
         from
-            {{ ref('src_crypto_raw__candles_day') }}
+            {{ source('crypto_raw', 'candles_day') }}
     ),
     close_stats_1 as (
         select
@@ -37,7 +37,7 @@ with
             localtimestamp(3) as ts_updated
         from
             {{ ref('calendar') }} as calendar
-        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
+        left outer join {{ source('crypto_raw', 'candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -61,7 +61,7 @@ with
             localtimestamp(3) as ts_updated
         from
             {{ ref('calendar') }} as calendar
-        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
+        left outer join {{ source('crypto_raw', 'candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -85,7 +85,7 @@ with
             localtimestamp(3) as ts_updated
         from
             {{ ref('calendar') }} as calendar
-        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
+        left outer join {{ source('crypto_raw', 'candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -109,7 +109,7 @@ with
             localtimestamp(3) as ts_updated
         from
             {{ ref('calendar') }} as calendar
-        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
+        left outer join {{ source('crypto_raw', 'candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -133,7 +133,7 @@ with
             localtimestamp(3) as ts_updated
         from
             {{ ref('calendar') }} as calendar
-        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
+        left outer join {{ source('crypto_raw', 'candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
@@ -157,7 +157,7 @@ with
             localtimestamp(3) as ts_updated
         from
             {{ ref('calendar') }} as calendar
-        left outer join {{ ref('src_crypto_raw__candles_day') }} as base
+        left outer join {{ source('crypto_raw', 'candles_day') }} as base
             on calendar.date_day = base.dt_create_utc
         where
             calendar.date_day >= (select min_dt from min_max_dt)
