@@ -17,6 +17,7 @@ script/manual_operations/*
 script/kafka_producers/__pycache__/*
 script/kafka_consumers/__pycache__/*
 script/dbt/crypto_etl_pjr/logs/*
+script/dbt/crypto_etl_pjr/docs/*
 script/dbt/crypto_etl_pjr/target/*
 script/dbt/crypto_etl_pjr/dbt_packages/*
 script/dbt/crypto_etl_pjr/.user.yml

@@ -2,7 +2,7 @@
 version: 2
 
 sources:
-  - name: crypto_raw
+  - name: crypto__crypto_raw
     database: hive
     schema: crypto_raw
     tables:
@@ -11,3 +11,8 @@ sources:
       - name: candles_realtime
       - name: market_trade
       - name: order_book
+  - name: crypto__util
+    database: hive
+    schema: util
+    tables:
+      - name: calendar

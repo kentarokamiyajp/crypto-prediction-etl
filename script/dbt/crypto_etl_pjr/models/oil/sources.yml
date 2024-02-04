@@ -1,7 +1,7 @@
 version: 2
 
 sources:
-  - name: oil_raw
+  - name: oil__oil_raw
     database: hive
     schema: oil_raw
     tables:

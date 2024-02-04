@@ -1,7 +1,7 @@
 version: 2
 
 sources:
-  - name: forex_raw
+  - name: forex__forex_raw
     database: hive
     schema: forex_raw
     tables:

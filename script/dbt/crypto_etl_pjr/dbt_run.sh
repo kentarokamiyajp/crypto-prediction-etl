@@ -58,7 +58,7 @@ echo "Finished dbt debug !!!"
 ##############################
 echo "Running dbt run ..."
 
-# create source views
+# for crytpo_mart
 profile="crypto_mart"
 model="crypto"
 dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
@@ -68,6 +68,17 @@ if [ ${exec_status} != 0 ]; then
     echo "Failed command: 'dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}'"
     exit 1
 fi
+
+# # for cross_use
+# profile="cross_use"
+# model="cross_use"
+# dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}
+# exec_status=$?
+# if [ ${exec_status} != 0 ]; then
+#     echo "DBT RUN Failed !!!"
+#     echo "Failed command: 'dbt run --profiles-dir ${profile_dir} --target ${target} --profile ${profile} --select ${model}'"
+#     exit 1
+# fi
 
 echo "Finishied dbt run !!!"
 

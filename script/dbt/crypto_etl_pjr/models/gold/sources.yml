@@ -1,7 +1,7 @@
 version: 2
 
 sources:
-  - name: gold_raw
+  - name: gold__gold_raw
     database: hive
     schema: gold_raw
     tables:

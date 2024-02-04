@@ -1,7 +1,7 @@
 version: 2
 
 sources:
-  - name: gas_raw
+  - name: gas__gas_raw
     database: hive
     schema: gas_raw
     tables:
