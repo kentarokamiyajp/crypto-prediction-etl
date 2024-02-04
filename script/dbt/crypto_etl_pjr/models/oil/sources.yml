@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: oil__oil_raw
+    database: hive
+    schema: oil_raw
+    tables:
+      - name: crude_oil_price_day

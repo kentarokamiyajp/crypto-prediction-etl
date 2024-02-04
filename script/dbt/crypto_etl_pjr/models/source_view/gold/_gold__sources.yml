@@ -1,8 +1,0 @@
-version: 2
-
-sources:
-  - name: gold_raw
-    database: hive
-    schema: gold_raw
-    tables:
-      - name: gold_price_day

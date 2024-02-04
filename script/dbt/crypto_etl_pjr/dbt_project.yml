@@ -6,7 +6,7 @@ version: '1.0.0'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
-profile: 'cross_use'
+profile: 'crypto_mart'
 
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
@@ -31,7 +31,54 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   crypto_etl_pjr:
-    example:
+    cross_use:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    crypto:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    forex:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    gas:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    gold:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    oil:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    stock:
+      staging:
+        +materialized: table
+      intermediate:
+        +materialized: table
+      marts:
+        +materialized: table
+    utilities:
       +materialized: table
-    source_view:
-      +materialized: view

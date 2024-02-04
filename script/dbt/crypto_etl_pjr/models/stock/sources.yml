@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: stock__stock_raw
+    database: hive
+    schema: stock_raw
+    tables:
+      - name: stock_index_day

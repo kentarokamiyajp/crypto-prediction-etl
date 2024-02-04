@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: crypto_daily_close_stats
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - symbol_id
+            - dt_start
+            - dt_end

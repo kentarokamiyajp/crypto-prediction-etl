@@ -1,53 +1,71 @@
-cross_use:
+util:
+  target: dev
   outputs:
-
     dev:
       type: trino
-      method: none  # optional, one of {none | ldap | kerberos}
+      method: none # optional, one of {none | ldap | kerberos}
       user: trino
-      password: [password]  # required if method is ldap or kerberos
+      password: [password] # required if method is ldap or kerberos
       database: hive
       host: "{{ env_var('HIVE_HOST') }}"
       port: 8881
-      schema: dev_cross_use_mart
+      schema: dev_util
       threads: 3
-
     prod:
       type: trino
-      method: none  # optional, one of {none | ldap | kerberos}
+      method: none # optional, one of {none | ldap | kerberos}
       user: trino
-      password: [password]  # required if method is ldap or kerberos
+      password: [password] # required if method is ldap or kerberos
       database: hive
       host: "{{ env_var('HIVE_HOST') }}"
       port: 8881
-      schema: cross_use_mart
+      schema: util
       threads: 3
 
+cross_use:
   target: dev
-
-crypto_mart:
   outputs:
-
     dev:
       type: trino
-      method: none  # optional, one of {none | ldap | kerberos}
+      method: none # optional, one of {none | ldap | kerberos}
       user: trino
-      password: [password]  # required if method is ldap or kerberos
+      password: [password] # required if method is ldap or kerberos
+      database: hive
+      host: "{{ env_var('HIVE_HOST') }}"
+      port: 8881
+      schema: dev_cross_use
+      threads: 3
+    prod:
+      type: trino
+      method: none # optional, one of {none | ldap | kerberos}
+      user: trino
+      password: [password] # required if method is ldap or kerberos
+      database: hive
+      host: "{{ env_var('HIVE_HOST') }}"
+      port: 8881
+      schema: cross_use
+      threads: 3
+
+crypto_mart:
+  target: dev
+  outputs:
+    dev:
+      type: trino
+      method: none # optional, one of {none | ldap | kerberos}
+      user: trino
+      password: [password] # required if method is ldap or kerberos
       database: hive
       host: "{{ env_var('HIVE_HOST') }}"
       port: 8881
       schema: dev_crypto_mart
       threads: 3
-
     prod:
       type: trino
-      method: none  # optional, one of {none | ldap | kerberos}
+      method: none # optional, one of {none | ldap | kerberos}
       user: trino
-      password: [password]  # required if method is ldap or kerberos
+      password: [password] # required if method is ldap or kerberos
       database: hive
       host: "{{ env_var('HIVE_HOST') }}"
       port: 8881
       schema: crypto_mart
       threads: 3
-
-  target: dev
