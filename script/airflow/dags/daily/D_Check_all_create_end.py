@@ -42,7 +42,7 @@ with DAG(
     _failed_states = ["failed", "skipped"]
     _check_existence = True
     _poke_interval = 10
-    _execution_delta = timedelta(minutes=55)
+    _execution_delta = timedelta(minutes=45)
     _mode = "reschedule"
     _timeout = 3600
 
