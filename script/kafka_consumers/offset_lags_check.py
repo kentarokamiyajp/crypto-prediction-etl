@@ -102,10 +102,14 @@ def main():
 
             if curr_notification_count > max_notification_count:
                 ts_now = datetime.now(TZ_JST).strftime("%Y-%m-%d %H:%M:%S")
-                message = f"{ts_now} [FAILED] Stop checking offset lags. Consumer is not working anymore ({group_id}) !!!"
+                message = f"{ts_now} [FAILED] Stop checking offset lags for today !!!"
                 utils.send_line_message(message)
                 consumer.close()
-                sys.exit(1)
+                
+                # change here for weekly batch
+                curr_notification_count = 0
+                time.sleep(3600*24) # sleep 1 day
+                # sys.exit(1)
 
         except Exception as error:
             logger.error("Failed to check consumer offset lags !!!")
