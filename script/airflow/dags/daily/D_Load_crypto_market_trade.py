@@ -75,7 +75,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load market trade data collected by Kafka producer",
-    schedule_interval="0 1 * * *",
+    schedule_interval="0 1 * * 0",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -90,7 +90,7 @@ with DAG(
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
-    days_delete_from = 2
+    days_delete_from = 10
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",
