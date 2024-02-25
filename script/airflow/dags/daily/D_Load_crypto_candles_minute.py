@@ -200,7 +200,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load candles minute data daily",
-    schedule_interval="0 1 * * 0",
+    schedule_interval="0 5 * * 0",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,

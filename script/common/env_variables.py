@@ -10,6 +10,9 @@ load_dotenv(dotenv_path)
 LINE_NOTIFY_URL = os.environ.get("LINE_NOTIFY_URL")
 LINE_ACCESS_TOKEN = os.environ.get("LINE_ACCESS_TOKEN")
 
+MAC_HOST = os.environ.get("MAC_HOST")
+MAC_USER = os.environ.get("MAC_USER")
+
 UBUNTU_HOST = os.environ.get("UBUNTU_HOST")
 UBUNTU_USER = os.environ.get("UBUNTU_USER")
 UBUNTU_AIRFLOW_DOCKER_HOME = os.environ.get("UBUNTU_AIRFLOW_DOCKER_HOME")
