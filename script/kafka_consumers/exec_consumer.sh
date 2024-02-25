@@ -72,7 +72,7 @@ if [ ! -f "$MAIN_SCRIPT" ]; then
     exit 1
 fi
 
-python "${MAIN_SCRIPT}" "${DT_TODAY}" "${TS_NOW}" "${CONSUMER_ID}"  >> $LOG_FILE 2>&1 &
+/home/pyuser/.pyenv/shims/python "${MAIN_SCRIPT}" "${DT_TODAY}" "${TS_NOW}" "${CONSUMER_ID}"  >> $LOG_FILE 2>&1 &
 
 if [ $? -ne 0 ]; then
     echo "##############################################" >>$LOG_FILE
