@@ -75,7 +75,7 @@ with DAG(
             failed_states=_failed_states,
             check_existence=_check_existence,
             poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
+            execution_delta=timedelta(minutes=240),
             mode=_mode,
             timeout=_timeout,
         )

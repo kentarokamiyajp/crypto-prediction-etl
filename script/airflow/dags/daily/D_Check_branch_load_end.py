@@ -23,7 +23,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Check branch data loading completed",
-    schedule_interval="30 5 * * 0",
+    schedule_interval="0 6 * * 0",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -41,7 +41,7 @@ with DAG(
     _failed_states = ["failed", "skipped"]
     _check_existence = True
     _poke_interval = 10
-    _execution_delta = timedelta(minutes=30)
+    _execution_delta = timedelta(minutes=60)
     _mode = "reschedule"
     _timeout = 3600
 
@@ -54,7 +54,7 @@ with DAG(
             failed_states=_failed_states,
             check_existence=_check_existence,
             poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
+            execution_delta=timedelta(minutes=300),
             mode=_mode,
             timeout=_timeout,
         )
