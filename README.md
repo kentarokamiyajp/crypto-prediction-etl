@@ -1,5 +1,5 @@
 # Data Warehouse Architecture for Crypto Price Prediction (DWH)
-![Screenshot 2023-09-27 at 21 42 43](https://github.com/kamikennn/crypto_prediction_dwh/assets/45506894/8a1235a8-5f57-4efa-9d5f-53701bc2ebda)
+![image](https://github.com/kamikennn/crypto-prediction-dwh/assets/45506894/31ebd4d5-1fa3-4ee7-9a16-bcae99faffd0)
 ## System Overview
 - https://miro.com/app/board/uXjVMgqA6r8=/?share_link_id=394438367657
 ## Related Repositories
@@ -14,27 +14,29 @@
   - Forex price data
   - Stack index data
   - Others
-## Realtime Price Data Streaming
-- Data from Poloniex Websocket & Rest API
+## Realtime Data Streaming
+- Data from Poloniex via WebSocket
   - Order book
   - Market trade
   - Crypto price for every minute
-- Tools
-  - Kafka Producers and Consumers
-  - 3 Kafka brokers
+- Event streaming platform
+  - Kafka
+- Streaming Data Processing Tools
+  - Kafka Consumer
+  - Flink
+  - Spark Streaming
 ## Source Database
 - Cassandra
-  - 3 seed nodes
-  - Fast to write real-time data.
+- MongoDB
 ## Data Warehouse System
-- Data Storage
-  - Hadoop
-    - 3 data nodes
-  - Hive
+- Main DB
+  - Hive built on HDFS
 - ETL tools
   - Spark
-    - 5 workers
-  - Python
   - Trino
+  - DBT(?)
+## Data Analyzation
+- Druid for real-time analysis
+- Trino for ad-hoc analysis
 ## Job Scheduling Tool
 - Airflow
