@@ -7,7 +7,7 @@ from pyspark.sql.types import *
 from common import env_variables
 
 """
-Spark Streaming: 
+Spark Streaming:
     Kafka Topic -> Cassandra
 Usage:
     spark-submit --packages com.datastax.spark:spark-cassandra-connector_2.12:3.0.0 cassandra_connection.py 
