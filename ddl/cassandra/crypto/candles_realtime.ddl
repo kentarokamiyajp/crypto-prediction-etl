@@ -17,4 +17,4 @@ CREATE TABLE IF NOT EXISTS crypto.candles_realtime (
     ts_create_utc timestamp,
     ts_insert_utc timestamp,
     PRIMARY KEY ((id,dt_create_utc),ts_send)
-  ) WITH default_time_to_live = 864000;
+  ) WITH default_time_to_live=2592000 and gc_grace_seconds=3600;
