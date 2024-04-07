@@ -1,11 +1,3 @@
-import os, sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from common import env_variables
-
-KAFKA_BOOTSTRAP_SERVERS = env_variables.KAFKA_BOOTSTRAP_SERVERS
-
-
 def start_cassandra_write_stream(
     spark_streamer, transformed_df, checkpoint_location, cassandra_configs
 ):

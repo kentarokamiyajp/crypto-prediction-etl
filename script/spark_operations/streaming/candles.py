@@ -26,7 +26,7 @@ KAFKA_CONFIGS = {
 CASSANDRA_CONFIG = {
     "output_mode": "append",
     "dest_keyspace": "crypto",
-    "dest_table": "candles_realtime",
+    "dest_table": "test_candles_realtime",
 }
 
 
@@ -103,6 +103,9 @@ def main():
             to_timestamp(current_timestamp(), "yyyy-MM-dd HH:mm:ss").alias("ts_insert_utc"),
         )
     )
+    
+    # Show data
+    # transformed_df.writeStream.format("console").start().awaitTermination()
 
     # Start writing to Cassandra
     checkpoint_location = "{}/{}.{}".format(
@@ -110,6 +113,7 @@ def main():
         CASSANDRA_CONFIG["dest_keyspace"],
         CASSANDRA_CONFIG["dest_table"],
     )
+    print("checkpoint_location:",checkpoint_location)
     start_cassandra_write_stream(
         spark_streamer, transformed_df, checkpoint_location, CASSANDRA_CONFIG
     )

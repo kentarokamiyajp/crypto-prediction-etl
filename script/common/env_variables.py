@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv(verbose=True)
 
 dotenv_path = join(dirname(__file__), ".env")
-load_dotenv(dotenv_path)
+load_dotenv(dotenv_path, override=True)
 
 LINE_NOTIFY_URL = os.environ.get("LINE_NOTIFY_URL")
 LINE_ACCESS_TOKEN = os.environ.get("LINE_ACCESS_TOKEN")

@@ -2,24 +2,26 @@
 
 #########################################
 #
-#   file name:  exec_consumer.sh
-#   function:   Create a Kafka Consumer and start consuming.
-#   usage:      exec_consumer.sh <consumer_id>
-#   example:    sh exec_consumer.sh candles_minute_consumer
+#   file name:  main.sh
+#   function:   Start Saprk Streaming
+#   usage:      main.sh <stream_target>
+#               -> <stream_target>.py
+#   example:    sh main.sh candles
 #
 #########################################
 
 if [ $# != 1 ]; then
     echo "##############################################"
     echo "Argments Eroor !!!"
-    echo "usage: exec_consumer.sh <consumer_id>"
+    echo "usage: main.sh <stream_target>"
+    echo "     : -> <stream_target>.py"
     echo "##############################################"
     exit 1
 fi
 
-CONSUMER_ID=$1
+STREAM_TARGET=$1
 
-DEFAULT_CONF="../common/default_conf.sh"
+DEFAULT_CONF="../../common/default_conf.sh"
 if [ ! -f "$DEFAULT_CONF" ]; then
     echo "##############################################"
     echo "### READ Failded !!! ($DEFAULT_CONF)"
@@ -31,23 +33,10 @@ fi
 
 . $DEFAULT_CONF
 
-CONSUMER_CONF="./conf/${CONSUMER_ID}.cf"
-if [ ! -f "$CONSUMER_CONF" ]; then
-    echo "##############################################"
-    echo "### READ Failded !!! ($CONSUMER_CONF)"
-    echo "### Wrong working directory or file not found !!!"
-    echo "### pwd: $(pwd)"
-    echo "##############################################"
-    exit 1
-fi
-
-. $CONSUMER_CONF
-
-
 # Logging setup
 DT_TODAY=$(TZ="Asia/Tokyo" date +'%Y%m%d')
 TS_NOW=$(TZ="Asia/Tokyo" date +'%Y-%m-%d_%H:%M:%S')
-LOGDIR=${KAFKA_LOG_HOME}/${DT_TODAY}
+LOGDIR=${SPARK_LOG_HOME}/${DT_TODAY}
 
 if [ ! -d "$LOGDIR" ]; then
     mkdir -p "$LOGDIR"
@@ -59,10 +48,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-LOG_FILE=${LOGDIR}/${CONSUMER_ID}_${TS_NOW}.log
+LOG_FILE=${LOGDIR}/spark_streaming_${STREAM_TARGET}_${TS_NOW}.log
 
 # Start a consumer
-MAIN_SCRIPT=./${CONSUMER_ID}.py
+MAIN_SCRIPT=./${STREAM_TARGET}.py
 if [ ! -f "$MAIN_SCRIPT" ]; then
     echo "##############################################"
     echo "### READ Failded !!! ($MAIN_SCRIPT)"
@@ -72,15 +61,20 @@ if [ ! -f "$MAIN_SCRIPT" ]; then
     exit 1
 fi
 
-/home/pyuser/.pyenv/shims/python "${MAIN_SCRIPT}" "${DT_TODAY}" "${TS_NOW}" "${CONSUMER_ID}"  >> $LOG_FILE 2>&1 &
+/usr/local/bin/python "${MAIN_SCRIPT}" >>$LOG_FILE 2>&1 &
+/home/batch/pyvenv/bin/spark-submit \
+    --packages org.apache.spark:spark-sql-kafka-0-10_2.12:${SPARK_VERSION},com.datastax.spark:spark-cassandra-connector_2.12:3.0.0 \
+    "${MAIN_SCRIPT}" >>$LOG_FILE 2>&1 &
 
 if [ $? -ne 0 ]; then
     echo "##############################################" >>$LOG_FILE
-    echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded to start a Kafka Consumer !!!" >>$LOG_FILE
+    echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded Spark Streaming !!!" >>$LOG_FILE
     echo "##############################################" >>$LOG_FILE
     exit 1
 fi
 
 echo "##############################################" >>$LOG_FILE
-echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Completed to start a Kafka Consumer !!!" >>$LOG_FILE
+echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Completed Spark Streaming !!!" >>$LOG_FILE
 echo "##############################################" >>$LOG_FILE
+
+sh offset_check.sh "${STREAM_TARGET}" &

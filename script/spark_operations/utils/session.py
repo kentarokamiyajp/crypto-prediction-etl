@@ -7,12 +7,15 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+from pprint import pprint
 
 
 SPARK_VERSION = env_variables.SPARK_VERSION
 SPARK_MASTER_HOST = env_variables.SPARK_MASTER_HOST
 SPARK_MASTER_PORT = env_variables.SPARK_MASTER_PORT
-CASSANDRA_HOST = "192.168.10.4"
+HIVE_METASTORE_HOST = env_variables.HIVE_METASTORE_HOST
+HIVE_METASTORE_PORT = env_variables.HIVE_METASTORE_PORT
+CASSANDRA_HOST = env_variables.CASSANDRA_HOST
 CASSANDRA_PORT = env_variables.CASSANDRA_PORT
 CASSANDRA_USERNAME = env_variables.CASSANDRA_USERNAME
 CASSANDRA_PASSWORD = env_variables.CASSANDRA_PASSWORD
@@ -45,6 +48,9 @@ E.g., 2 cores * 5 workers
 class SparkStreamer:
     def __init__(self, app_name, configs):
         default_configs = {
+            "spark.master": f"spark://{SPARK_MASTER_HOST}:{SPARK_MASTER_PORT}",
+            "spark.hadoop.hive.metastore.uris": f"thrift://{HIVE_METASTORE_HOST}:{HIVE_METASTORE_PORT}",
+            "spark.sql.warehouse.dir": "/user/hive/warehouse",
             "spark.jars.packages": f"org.apache.spark:spark-sql-kafka-0-10_2.12:{SPARK_VERSION},com.datastax.spark:spark-cassandra-connector_2.12:3.0.0",
             "spark.streaming.stopGracefullyOnShutdown": "true",
             "spark.debug.maxToStringFields": "100",
@@ -68,6 +74,9 @@ class SparkStreamer:
 
         # Create Spark session with the config
         self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+        
+        print("Successfully created Spark Session !!!")
+        pprint(configs)
 
         self.spark.sparkContext.setLogLevel("ERROR")
 

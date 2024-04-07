@@ -1,0 +1,2 @@
+SPARK_STREAM="crypto.test_order_book_realtime"
+KAFKA_TOPIC="crypto.order_book"
