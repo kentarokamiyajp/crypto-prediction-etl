@@ -50,7 +50,7 @@ fi
 
 LOG_FILE=${LOGDIR}/spark_streaming_${STREAM_TARGET}_${TS_NOW}.log
 
-# Start a consumer
+# Check main script
 MAIN_SCRIPT=./${STREAM_TARGET}.py
 if [ ! -f "$MAIN_SCRIPT" ]; then
     echo "##############################################"
@@ -61,12 +61,14 @@ if [ ! -f "$MAIN_SCRIPT" ]; then
     exit 1
 fi
 
-/usr/local/bin/python "${MAIN_SCRIPT}" >>$LOG_FILE 2>&1 &
-/home/batch/pyvenv/bin/spark-submit \
-    --packages org.apache.spark:spark-sql-kafka-0-10_2.12:${SPARK_VERSION},com.datastax.spark:spark-cassandra-connector_2.12:3.0.0 \
-    "${MAIN_SCRIPT}" >>$LOG_FILE 2>&1 &
+echo "##############################################"
+echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Start Spark Streaming (${STREAM_TARGET}.py) !!!"
+echo "##############################################"
 
-if [ $? -ne 0 ]; then
+/usr/local/bin/python "${MAIN_SCRIPT}" >>$LOG_FILE 2>&1 &
+
+spark_result=$?
+if [ $spark_result -ne 0 ]; then
     echo "##############################################" >>$LOG_FILE
     echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded Spark Streaming !!!" >>$LOG_FILE
     echo "##############################################" >>$LOG_FILE

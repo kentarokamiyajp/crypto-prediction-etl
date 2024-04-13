@@ -1,7 +1,7 @@
 DROP TABLE crypto.order_book_realtime;
 
 -- default_time_to_live(retention period): 864000 (10 days) * N
-CREATE TABLE IF NOT EXISTS crypto.test_order_book_realtime (
+CREATE TABLE IF NOT EXISTS crypto.order_book_realtime (
     id varchar,
     seqid bigint,
     order_type varchar,

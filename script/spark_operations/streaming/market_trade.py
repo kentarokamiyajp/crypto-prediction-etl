@@ -99,12 +99,14 @@ def main():
     )
 
     # Start writing to Cassandra
-    checkpoint_location = "{}/{}.{}".format(
-        env_variables.SPARK_STREAMING_CHECKPOINT_DIR,
+    checkpoint_location = "hdfs://{}:{}/{}/{}.{}".format(
+        env_variables.HDFS_HOST,
+        env_variables.HDFS_PORT,
+        env_variables.SPARK_STREAMING_HDFS_CHECKPOINT_DIR,
         CASSANDRA_CONFIG["dest_keyspace"],
         CASSANDRA_CONFIG["dest_table"],
     )
-    print("checkpoint_location:",checkpoint_location)
+    print("checkpoint_location:", checkpoint_location)
     start_cassandra_write_stream(
         spark_streamer, transformed_df, checkpoint_location, CASSANDRA_CONFIG
     )

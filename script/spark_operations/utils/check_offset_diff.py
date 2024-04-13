@@ -6,14 +6,17 @@ from datetime import datetime, timezone
 from kafka import KafkaConsumer, TopicPartition
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from common import env_variables
+from common import env_variables, utils
 
 KAFKA_BOOTSTRAP_SERVERS = env_variables.KAFKA_BOOTSTRAP_SERVERS.split(",")
+SPARK_VOLUME_HOME = env_variables.SPARK_VOLUME_HOME
 
 # set the timezone to US/Pacific
 os.environ["TZ"] = "Asia/Tokyo"
 time.tzset()
 TZ_JST = pytz.timezone("Asia/Tokyo")
+
+ALLOWED_OFFSET_DIFF = 1000
 
 
 def _time_now():
@@ -38,10 +41,28 @@ def _compare_both_offsets(spark_offsets, kafka_offsets):
         kafka_offset = kafka_offsets[int(partition_id)]
         offset_diff[f"partition-{partition_id}"] = int(kafka_offset) - int(spark_offset)
 
-    return {'offset_diff': dict(sorted(offset_diff.items(), key=lambda x: x[0]))}
+    return {"offset_diff": dict(sorted(offset_diff.items(), key=lambda x: x[0]))}
 
 
-def main(spark_offset_file, kafka_topic):
+def _check_diff(kafka_topic, current_offset_diff, tmp_file):
+    try:
+        with open(tmp_file, "r") as f:
+            previous_offset_diff = json.load(f)["offset_diff"]
+    except:
+        print("There is no previous offset log !!!")
+        print(f"FILE: {tmp_file}")
+        return None
+
+    for partition_id, pre_offset_diff in previous_offset_diff.items():
+        if current_offset_diff[partition_id] > pre_offset_diff + ALLOWED_OFFSET_DIFF:
+            message = f"FAILED !!!\nToo many offset differences in {kafka_topic} !!!"
+            utils.send_line_message(message)
+            sys.exit(1)
+
+    return None
+
+
+def main(spark_offset_file, kafka_topic, printing=True):
 
     spark_offsets = _get_spark_offsets(spark_offset_file, kafka_topic)
 
@@ -66,11 +87,21 @@ def main(spark_offset_file, kafka_topic):
 
     offset_diff = _compare_both_offsets(spark_offsets, kafka_offsets)
 
-    print(
-        "{} {} (kafka_offsets: {}, spark_offsets: {})".format(
-            _time_now(), offset_diff, kafka_offsets, spark_offsets
+    if printing:
+        print(
+            "{} {} (kafka_offsets: {}, spark_offsets: {})".format(
+                _time_now(), offset_diff, kafka_offsets, spark_offsets
+            )
         )
-    )
+
+    tmp_file = f"{SPARK_VOLUME_HOME}/tmp/offset_diff_tmp_{kafka_topic}.txt"
+
+    # Compare "current offset diff" and "previous offset diff"
+    _check_diff(kafka_topic, offset_diff["offset_diff"], tmp_file)
+
+    # Save "current offset diff" for the next comparison
+    with open(tmp_file, "w") as f:
+        json.dump(offset_diff, f)
 
 
 if __name__ == "__main__":
@@ -78,7 +109,7 @@ if __name__ == "__main__":
 
     if len(args) != 3:
         print("Invalid arguments !!!")
-        print("e.g., python get_offset_diff.py <spark_offset_file> <kafka_topic>")
+        print("e.g., python check_offset_diff.py <spark_offset_file> <kafka_topic>")
         sys.exit(1)
 
     spark_offset_file = args[1]

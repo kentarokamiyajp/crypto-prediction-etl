@@ -127,8 +127,10 @@ def main():
     # final_df.writeStream.format("console").start().awaitTermination()
 
     # Start writing to Cassandra
-    checkpoint_location = "{}/{}.{}".format(
-        env_variables.SPARK_STREAMING_CHECKPOINT_DIR,
+    checkpoint_location = "hdfs://{}:{}/{}/{}.{}".format(
+        env_variables.HDFS_HOST,
+        env_variables.HDFS_PORT,
+        env_variables.SPARK_STREAMING_HDFS_CHECKPOINT_DIR,
         CASSANDRA_CONFIG["dest_keyspace"],
         CASSANDRA_CONFIG["dest_table"],
     )
