@@ -88,10 +88,11 @@ def main():
 
     ask_df = (
         ask_df.select("*", posexplode_outer("asks"))
+        .withColumn("order_rank", col("pos") + 1)
         .withColumn("quote_price", element_at(col("col"), 1))
         .withColumn("base_amount", element_at(col("col"), 2))
         .withColumn("order_type", lit("ask"))
-        .drop("value", "asks", "col", "exploded_ask")
+        .drop("value", "asks", "pos", "col", "exploded_ask")
     )
 
     bid_df = (
@@ -108,10 +109,11 @@ def main():
 
     bid_df = (
         bid_df.select("*", posexplode_outer("bids"))
+        .withColumn("order_rank", col("pos") + 1)
         .withColumn("quote_price", element_at(col("col"), 1))
         .withColumn("base_amount", element_at(col("col"), 2))
         .withColumn("order_type", lit("bid"))
-        .drop("value", "bids", "col", "exploded_bid")
+        .drop("value", "bids", "pos", "col", "exploded_bid")
     )
 
     final_df = (

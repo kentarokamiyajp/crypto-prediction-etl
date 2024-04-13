@@ -52,8 +52,9 @@ OUTDIR="$HOME/spark/checkpoints/$CURRENT_DAY"
 
 # init directory
 mkdir -p "$OUTDIR"
-SPARK_OFFSET_OUT="${OUTDIR}/spark_latest_offsets_${STREAM_TARGET}.txt"
-OFFSET_DIFF_OUT="${OUTDIR}/offset_diff_${STREAM_TARGET}.txt"
+TS_FOR_FILE=$(TZ="Asia/Tokyo" date +'%Y-%m-%dT%H:%M:%S+0900')
+SPARK_OFFSET_OUT="${OUTDIR}/spark_latest_offsets_${STREAM_TARGET}_${TS_FOR_FILE}.txt"
+OFFSET_DIFF_OUT="${OUTDIR}/offset_diff_${STREAM_TARGET}_${TS_FOR_FILE}.txt"
 
 echo "$(TZ="Asia/Tokyo" date +'%Y-%m-%d_%H:%M:%S') Offset Diff (<Kafka Last Offset> - <Spark Last Offset>)" >>"$OFFSET_DIFF_OUT"
 

@@ -38,7 +38,7 @@ def _compare_both_offsets(spark_offsets, kafka_offsets):
         kafka_offset = kafka_offsets[int(partition_id)]
         offset_diff[f"partition-{partition_id}"] = int(kafka_offset) - int(spark_offset)
 
-    return dict(sorted(offset_diff.items(), key=lambda x: x[0]))
+    return {'offset_diff': dict(sorted(offset_diff.items(), key=lambda x: x[0]))}
 
 
 def main(spark_offset_file, kafka_topic):

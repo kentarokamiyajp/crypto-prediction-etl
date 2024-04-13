@@ -94,10 +94,10 @@ def main():
             element_at(col("value.data.ts_send"), 1).alias("ts_send"),
             element_at(col("value.data.startTime"), 1).alias("starttime"),
             element_at(col("value.data.closeTime"), 1).alias("closetime"),
-            from_unixtime(element_at(col("value.data.closeTime"), 1), "yyyy-MM-dd HH:mm:ss").alias(
+            from_unixtime(element_at(col("value.data.ts_send"), 1), "yyyy-MM-dd HH:mm:ss").alias(
                 "ts_create_utc"
             ),
-            from_unixtime(element_at(col("value.data.closeTime"), 1), "yyyy-MM-dd").alias(
+            from_unixtime(element_at(col("value.data.ts_send"), 1), "yyyy-MM-dd").alias(
                 "dt_create_utc"
             ),
             to_timestamp(current_timestamp(), "yyyy-MM-dd HH:mm:ss").alias("ts_insert_utc"),

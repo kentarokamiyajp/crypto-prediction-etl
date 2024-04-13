@@ -1,6 +1,6 @@
 DROP TABLE crypto.market_trade_realtime;
 
--- retention period: 864000 (10 days)
+-- default_time_to_live(retention period): 864000 (10 days) * N
 CREATE TABLE IF NOT EXISTS crypto.market_trade_realtime (
     id varchar,
     trade_id bigint,
@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS crypto.market_trade_realtime (
     dt_create_utc date,
     ts_create_utc timestamp,
     ts_insert_utc timestamp,
-    PRIMARY KEY ((id, dt_create_utc),trade_id)
+    PRIMARY KEY ((id, dt_create_utc), trade_id)
 ) WITH default_time_to_live=2592000 and gc_grace_seconds=3600;
