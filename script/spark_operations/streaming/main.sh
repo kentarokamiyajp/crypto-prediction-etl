@@ -80,3 +80,5 @@ echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Completed Spark Streaming !!!" >
 echo "##############################################" >>$LOG_FILE
 
 sh offset_check.sh "${STREAM_TARGET}" &
+
+exit 0

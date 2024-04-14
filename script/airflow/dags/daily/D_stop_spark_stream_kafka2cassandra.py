@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "D_stop_spark_stream_kafka2cassandra"
-tags = ["spark"]
+tags = ["daily", "load", "pyspark", "streaming"]
 
 
 def _task_failure_alert(context):
@@ -42,7 +42,7 @@ with DAG(
         remote_host=env_variables.BATCH_HOST,
         username=env_variables.BATCH_USER,
         key_file=env_variables.AIRFLOW_PRIVATE_KEY,
-        port=env_variables.BATCH_HOST_SSH_PORT
+        port=env_variables.BATCH_HOST_SSH_PORT,
     )
 
     base_command = f"export KAFKA_HOME=/home/{env_variables.BATCH_USER}/kafka && \

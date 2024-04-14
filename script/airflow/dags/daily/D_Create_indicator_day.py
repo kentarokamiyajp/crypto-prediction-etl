@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 dag_id = "D_Create_indicator_day"
-tags = ["daily", "create", "indicator"]
+tags = ["daily", "create", "indicator", "pyspark"]
 
 
 def _task_failure_alert(context):

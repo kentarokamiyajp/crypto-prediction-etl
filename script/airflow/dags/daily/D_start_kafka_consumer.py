@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 dag_id = "D_start_kafka_consumer"
-tags = ["kafka"]
+tags = ["daily", "load", "kafka", "consumer"]
 
 
 def _task_failure_alert(context):

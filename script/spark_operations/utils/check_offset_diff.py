@@ -15,12 +15,13 @@ SPARK_VOLUME_HOME = env_variables.SPARK_VOLUME_HOME
 os.environ["TZ"] = "Asia/Tokyo"
 time.tzset()
 TZ_JST = pytz.timezone("Asia/Tokyo")
+CURRENT_DATE = datetime.now(TZ_JST).strftime("%Y%m%d")
 
 ALLOWED_OFFSET_DIFF = 1000
 
 
-def _time_now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+def _time_now_jst():
+    return datetime.now(TZ_JST).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _get_spark_offsets(spark_offset_file, kafka_topic):
@@ -50,12 +51,15 @@ def _check_diff(kafka_topic, current_offset_diff, tmp_file):
             previous_offset_diff = json.load(f)["offset_diff"]
     except:
         print("There is no previous offset log !!!")
-        print(f"FILE: {tmp_file}")
+        print(f"Offset tmp file: {tmp_file}")
         return None
 
     for partition_id, pre_offset_diff in previous_offset_diff.items():
-        if current_offset_diff[partition_id] > pre_offset_diff + ALLOWED_OFFSET_DIFF:
-            message = f"FAILED !!!\nToo many offset differences in {kafka_topic} !!!"
+        curr_offset_diff = current_offset_diff[partition_id]
+        if curr_offset_diff > pre_offset_diff and ALLOWED_OFFSET_DIFF < curr_offset_diff:
+            message = (
+                f"FAILED Spark Streaming !!!\n\nToo many offset differences in {kafka_topic} !!!"
+            )
             utils.send_line_message(message)
             sys.exit(1)
 
@@ -90,11 +94,11 @@ def main(spark_offset_file, kafka_topic, printing=True):
     if printing:
         print(
             "{} {} (kafka_offsets: {}, spark_offsets: {})".format(
-                _time_now(), offset_diff, kafka_offsets, spark_offsets
+                _time_now_jst(), offset_diff, kafka_offsets, spark_offsets
             )
         )
 
-    tmp_file = f"{SPARK_VOLUME_HOME}/tmp/offset_diff_tmp_{kafka_topic}.txt"
+    tmp_file = f"{SPARK_VOLUME_HOME}/tmp/{CURRENT_DATE}/offset_diff_tmp_{kafka_topic}.txt"
 
     # Compare "current offset diff" and "previous offset diff"
     _check_diff(kafka_topic, offset_diff["offset_diff"], tmp_file)
