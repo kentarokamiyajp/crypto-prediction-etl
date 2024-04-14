@@ -24,7 +24,7 @@ args = {"owner": "airflow", "retries": 0, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Start Kafka consumer processes",
-    schedule_interval="30 15 * * 6",
+    schedule_interval="30 15 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,

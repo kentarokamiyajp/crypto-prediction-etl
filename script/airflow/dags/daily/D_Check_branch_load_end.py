@@ -23,7 +23,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Check branch data loading completed",
-    schedule_interval="0 6 * * 0",
+    schedule_interval="0 21 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -41,11 +41,13 @@ with DAG(
     _failed_states = ["failed", "skipped"]
     _check_existence = True
     _poke_interval = 10
-    _execution_delta = timedelta(minutes=60)
+    _execution_delta = timedelta(minutes=180)
     _mode = "reschedule"
     _timeout = 3600
 
-    with TaskGroup("wait_target_tasks", tooltip="Wait for the all load tasks finish") as wait_target_tasks:
+    with TaskGroup(
+        "wait_target_tasks", tooltip="Wait for the all load tasks finish"
+    ) as wait_target_tasks:
         wait_for_D_Load_crypto_candles_minute = ExternalTaskSensor(
             task_id="wait_for_D_Load_crypto_candles_minute",
             external_dag_id="D_Load_crypto_candles_minute",
@@ -84,7 +86,7 @@ with DAG(
             mode=_mode,
             timeout=_timeout,
         )
-        
+
         wait_for_D_Load_crypto_candles_realtime = ExternalTaskSensor(
             task_id="wait_for_D_Load_crypto_candles_realtime",
             external_dag_id="D_Load_crypto_candles_realtime",

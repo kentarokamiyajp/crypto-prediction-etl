@@ -57,6 +57,9 @@ def _check_diff(kafka_topic, current_offset_diff, tmp_file):
     for partition_id, pre_offset_diff in previous_offset_diff.items():
         curr_offset_diff = current_offset_diff[partition_id]
         if curr_offset_diff > pre_offset_diff and ALLOWED_OFFSET_DIFF < curr_offset_diff:
+            print(f"curr_offset_diff: {curr_offset_diff}")
+            print(f"pre_offset_diff: {pre_offset_diff}")
+            print(f"ALLOWED_OFFSET_DIFF: {ALLOWED_OFFSET_DIFF}")
             message = (
                 f"FAILED Spark Streaming !!!\n\nToo many offset differences in {kafka_topic} !!!"
             )

@@ -1,2 +1,2 @@
-SPARK_STREAM="crypto.test_candles_realtime"
+SPARK_STREAM="crypto.candles_realtime"
 KAFKA_TOPIC="crypto.candles_minute"

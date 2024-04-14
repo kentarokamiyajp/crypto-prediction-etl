@@ -70,7 +70,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Remove existing tmp files
-rm -rf "${TMP_DIR:?}/"*
+rm -rf "${TMP_DIR:?}/"*"${STREAM_TARGET}"*
 
 # Set a tmp file to write latest offsets in spark streaming
 SPARK_OFFSET_TMP="${TMP_DIR}/spark_latest_offsets_${STREAM_TARGET}.txt"
@@ -120,6 +120,7 @@ while :; do
     if [ $hdfs_result -ne 0 ]; then
         echo "##############################################"
         echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Failded HDFS command !!!"
+        echo "### Executed command: /home/batch/hadoop-3.3.6/bin/hdfs dfs -cat $LATEST_OFFSET_LOG > $SPARK_OFFSET_TMP"
         echo "##############################################"
         exit 1
     fi

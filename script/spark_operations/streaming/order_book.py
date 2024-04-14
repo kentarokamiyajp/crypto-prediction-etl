@@ -19,7 +19,7 @@ SPARK_CONFIG = {"spark.cores.max": "3", "spark.executor.cores": "1", "spark.exec
 # and they're managed by spark, not by Kafka consumer group.
 KAFKA_CONFIGS = {
     "subscribe": "crypto.order_book",
-    "maxOffsetsPerTrigger": 1000,
+    "maxOffsetsPerTrigger": 10000,
     "startingOffsets": "earliest",
 }
 
@@ -27,7 +27,7 @@ KAFKA_CONFIGS = {
 CASSANDRA_CONFIG = {
     "output_mode": "append",
     "dest_keyspace": "crypto",
-    "dest_table": "test_order_book_realtime",
+    "dest_table": "order_book_realtime",
 }
 
 

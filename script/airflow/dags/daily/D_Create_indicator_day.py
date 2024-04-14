@@ -58,7 +58,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Create mart tables for crude oil price indicators",
-    schedule_interval="15 1 * * 0",
+    schedule_interval="15 16 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -129,10 +129,14 @@ with DAG(
         str(update_N_months_from),
     ]
 
-    with TaskGroup("spark_create_indicator", tooltip="Create indicators for each feature") as spark_create_indicator:
+    with TaskGroup(
+        "spark_create_indicator", tooltip="Create indicators for each feature"
+    ) as spark_create_indicator:
         create_crude_oil_indicator = SparkSubmitOperator(
             task_id="create_crude_oil_indicator",
-            application="{}/pyspark/D_Create_crude_oil_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
+            application="{}/pyspark/D_Create_crude_oil_ind_day_001.py".format(
+                airflow_env_variables.QUERY_SCRIPT_HOME
+            ),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -141,7 +145,9 @@ with DAG(
 
         create_crypto_indicator = SparkSubmitOperator(
             task_id="create_crypto_indicator",
-            application="{}/pyspark/D_Create_crypto_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
+            application="{}/pyspark/D_Create_crypto_ind_day_001.py".format(
+                airflow_env_variables.QUERY_SCRIPT_HOME
+            ),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -150,7 +156,9 @@ with DAG(
 
         create_forex_indicator = SparkSubmitOperator(
             task_id="create_forex_indicator",
-            application="{}/pyspark/D_Create_forex_rate_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
+            application="{}/pyspark/D_Create_forex_rate_ind_day_001.py".format(
+                airflow_env_variables.QUERY_SCRIPT_HOME
+            ),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,
@@ -159,7 +167,9 @@ with DAG(
 
         create_gold_indicator = SparkSubmitOperator(
             task_id="create_gold_indicator",
-            application="{}/pyspark/D_Create_gold_price_ind_day_001.py".format(airflow_env_variables.QUERY_SCRIPT_HOME),
+            application="{}/pyspark/D_Create_gold_price_ind_day_001.py".format(
+                airflow_env_variables.QUERY_SCRIPT_HOME
+            ),
             conf=spark_conf,
             conn_id=spark_conn_id,
             application_args=spark_application_args,

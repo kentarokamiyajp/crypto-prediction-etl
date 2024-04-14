@@ -23,7 +23,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Check trunk data loading completed",
-    schedule_interval="10 1 * * 0",
+    schedule_interval="10 16 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -45,7 +45,9 @@ with DAG(
     _mode = "reschedule"
     _timeout = 3600
 
-    with TaskGroup("wait_target_tasks", tooltip="Wait for the all load tasks finish") as wait_target_tasks:
+    with TaskGroup(
+        "wait_target_tasks", tooltip="Wait for the all load tasks finish"
+    ) as wait_target_tasks:
         wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
             task_id="wait_for_D_Load_crude_oil_price_day",
             external_dag_id="D_Load_crude_oil_price_day",
