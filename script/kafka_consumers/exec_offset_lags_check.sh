@@ -47,7 +47,7 @@ TS_NOW=$(TZ="Asia/Tokyo" date +'%Y-%m-%d_%H:%M:%S')
 LOGDIR=${KAFKA_LOG_HOME}/${DT_TODAY}
 
 if [ ! -d "$LOGDIR" ]; then
-    mkdir "$LOGDIR"
+    mkdir -p "$LOGDIR"
 fi
 if [ $? -ne 0 ]; then
     echo "##############################################"

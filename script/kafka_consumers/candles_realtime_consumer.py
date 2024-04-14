@@ -94,8 +94,8 @@ def main():
 
         except Exception as error:
             curr_retry_cnt += 1
-            if curr_retry_cnt > max_retry_cnt:
-                consumer.logger.error("Kafka Consumer failed !!!")
+            if curr_retry_cnt >= max_retry_cnt:
+                consumer.logger.error("Kafka Consumer failed !!! Retry ({}/{})".format(curr_retry_cnt, max_retry_cnt))
                 consumer.logger.error("Error:".format(error))
                 consumer.logger.error(traceback.format_exc())
                 ts_now = datetime.now(TZ_JST).strftime("%Y-%m-%d %H:%M:%S")

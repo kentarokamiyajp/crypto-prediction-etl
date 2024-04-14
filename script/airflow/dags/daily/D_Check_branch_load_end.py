@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-dag_id = "D_Check_trunk_load_end"
+dag_id = "D_Check_branch_load_end"
 tags = ["daily", "check"]
 
 
@@ -22,8 +22,8 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 
 with DAG(
     dag_id,
-    description="Check trunk data loading completed",
-    schedule_interval="10 16 * * 5",
+    description="Check branch data loading completed",
+    schedule_interval="0 21 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -41,16 +41,29 @@ with DAG(
     _failed_states = ["failed", "skipped"]
     _check_existence = True
     _poke_interval = 10
-    _execution_delta = timedelta(minutes=10)
+    _execution_delta = timedelta(minutes=180)
     _mode = "reschedule"
     _timeout = 3600
 
     with TaskGroup(
         "wait_target_tasks", tooltip="Wait for the all load tasks finish"
     ) as wait_target_tasks:
-        wait_for_D_Load_crude_oil_price_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_crude_oil_price_day",
-            external_dag_id="D_Load_crude_oil_price_day",
+        wait_for_D_Load_crypto_candles_minute = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_candles_minute",
+            external_dag_id="D_Load_crypto_candles_minute",
+            external_task_id="dag_end",
+            allowed_states=_allowed_states,
+            failed_states=_failed_states,
+            check_existence=_check_existence,
+            poke_interval=_poke_interval,
+            execution_delta=timedelta(minutes=300),
+            mode=_mode,
+            timeout=_timeout,
+        )
+
+        wait_for_D_Load_crypto_market_trade = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_market_trade",
+            external_dag_id="D_Load_crypto_market_trade",
             external_task_id="dag_end",
             allowed_states=_allowed_states,
             failed_states=_failed_states,
@@ -61,9 +74,9 @@ with DAG(
             timeout=_timeout,
         )
 
-        wait_for_D_Load_crypto_candles_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_crypto_candles_day",
-            external_dag_id="D_Load_crypto_candles_day",
+        wait_for_D_Load_crypto_order_book = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_order_book",
+            external_dag_id="D_Load_crypto_order_book",
             external_task_id="dag_end",
             allowed_states=_allowed_states,
             failed_states=_failed_states,
@@ -74,48 +87,9 @@ with DAG(
             timeout=_timeout,
         )
 
-        wait_for_D_Load_forex_rate_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_forex_rate_day",
-            external_dag_id="D_Load_forex_rate_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_gold_price_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_gold_price_day",
-            external_dag_id="D_Load_gold_price_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_natural_gas_price_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_natural_gas_price_day",
-            external_dag_id="D_Load_natural_gas_price_day",
-            external_task_id="dag_end",
-            allowed_states=_allowed_states,
-            failed_states=_failed_states,
-            check_existence=_check_existence,
-            poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
-            mode=_mode,
-            timeout=_timeout,
-        )
-
-        wait_for_D_Load_stock_index_value_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_stock_index_value_day",
-            external_dag_id="D_Load_stock_index_value_day",
+        wait_for_D_Load_crypto_candles_realtime = ExternalTaskSensor(
+            task_id="wait_for_D_Load_crypto_candles_realtime",
+            external_dag_id="D_Load_crypto_candles_realtime",
             external_task_id="dag_end",
             allowed_states=_allowed_states,
             failed_states=_failed_states,
@@ -127,12 +101,10 @@ with DAG(
         )
 
         [
-            wait_for_D_Load_crude_oil_price_day,
-            wait_for_D_Load_crypto_candles_day,
-            wait_for_D_Load_forex_rate_day,
-            wait_for_D_Load_gold_price_day,
-            wait_for_D_Load_natural_gas_price_day,
-            wait_for_D_Load_stock_index_value_day,
+            wait_for_D_Load_crypto_candles_minute,
+            wait_for_D_Load_crypto_market_trade,
+            wait_for_D_Load_crypto_order_book,
+            wait_for_D_Load_crypto_candles_realtime,
         ]
 
     dag_end = DummyOperator(task_id="dag_end")

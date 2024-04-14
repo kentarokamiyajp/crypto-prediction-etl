@@ -1,0 +1,2 @@
+SPARK_STREAM="crypto.candles_realtime"
+KAFKA_TOPIC="crypto.candles_minute"

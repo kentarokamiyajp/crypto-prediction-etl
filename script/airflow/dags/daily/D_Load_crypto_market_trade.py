@@ -62,7 +62,7 @@ def _load_from_cassandra_to_hive(query_file, days_delete_from, symbols_to_load):
         _query = f.read()
 
     for symbol in symbols_to_load:
-        for day in range(0, days_delete_from+1):
+        for day in range(0, days_delete_from + 1):
             query = _query.replace("${N}", str(-day))
             query = query.replace("${symbol}", symbol)
             logger.info("RUN QUERY")
@@ -75,7 +75,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load market trade data collected by Kafka producer",
-    schedule_interval="0 1 * * *",
+    schedule_interval="0 18 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -90,7 +90,7 @@ with DAG(
 
     query_dir = "{}/trino".format(airflow_env_variables.QUERY_SCRIPT_HOME)
 
-    days_delete_from = 2
+    days_delete_from = 9
 
     delete_past_data_from_hive = PythonOperator(
         task_id="delete_past_data_from_hive",
@@ -110,17 +110,23 @@ with DAG(
         },
     )
 
-    symbols_to_load = ['BTC_USDT','ETH_USDT']
+    symbols_to_load = ["BTC_USDT", "ETH_USDT"]
     load_from_cassandra_to_hive = PythonOperator(
         task_id="load_from_cassandra_to_hive",
         python_callable=_load_from_cassandra_to_hive,
         op_kwargs={
             "query_file": f"{query_dir}/D_Load_crypto_market_trade_003.sql",
             "days_delete_from": days_delete_from,
-            "symbols_to_load":symbols_to_load,
+            "symbols_to_load": symbols_to_load,
         },
     )
 
     dag_end = DummyOperator(task_id="dag_end")
 
-    (dag_start >> delete_past_data_from_hive >> hive_deletion_check >> load_from_cassandra_to_hive >> dag_end)
+    (
+        dag_start
+        >> delete_past_data_from_hive
+        >> hive_deletion_check
+        >> load_from_cassandra_to_hive
+        >> dag_end
+    )

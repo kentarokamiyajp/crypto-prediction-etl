@@ -31,7 +31,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Check all creating dags completed",
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 21 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -53,7 +53,9 @@ with DAG(
     _mode = "reschedule"
     _timeout = 3600
 
-    with TaskGroup("wait_target_tasks", tooltip="Wait for the all create tasks finish") as wait_target_tasks:
+    with TaskGroup(
+        "wait_target_tasks", tooltip="Wait for the all create tasks finish"
+    ) as wait_target_tasks:
         wait_for_D_Check_all_load_end = ExternalTaskSensor(
             task_id="wait_for_D_Check_all_load_end",
             external_dag_id="D_Check_all_load_end",
@@ -75,7 +77,7 @@ with DAG(
             failed_states=_failed_states,
             check_existence=_check_existence,
             poke_interval=_poke_interval,
-            execution_delta=_execution_delta,
+            execution_delta=timedelta(minutes=240),
             mode=_mode,
             timeout=_timeout,
         )

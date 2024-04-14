@@ -50,7 +50,7 @@ TS_NOW=$(TZ="Asia/Tokyo" date +'%Y-%m-%d_%H:%M:%S')
 LOGDIR=${KAFKA_LOG_HOME}/${DT_TODAY}
 
 if [ ! -d "$LOGDIR" ]; then
-    mkdir "$LOGDIR"
+    mkdir -p "$LOGDIR"
 fi
 if [ $? -ne 0 ]; then
     echo "##############################################"
@@ -72,9 +72,9 @@ kafka-topics.sh --bootstrap-server "${KAFKA_BOOTSTRAP_SERVERS}" \
     --partitions "${NUM_PARTITIONS}" \
     --replication-factor "${REPLICATION_FOCTOR}" \
     --if-not-exists \
-    --config retention.ms="${RETENTION_MS}"\
-    --config segment.ms="${SEGMENT_MS}"\
-    --config cleanup.policy="${CLEANUP_POLICY}"\
+    --config retention.ms="${RETENTION_MS}" \
+    --config segment.ms="${SEGMENT_MS}" \
+    --config cleanup.policy="${CLEANUP_POLICY}" \
     1>>$LOG_FILE 2>>$LOG_FILE
 
 if [ $? -ne 0 ]; then
@@ -107,3 +107,14 @@ fi
 echo "##############################################" >>$LOG_FILE
 echo "### $(TZ=Japan date +'%Y-%m-%d %H:%M:%S') Completed to start a Kafka Producer !!!" >>$LOG_FILE
 echo "##############################################" >>$LOG_FILE
+
+
+
+##########################
+# Change retention period
+##########################
+
+# kafka-configs.sh --bootstrap-server "${KAFKA_BOOTSTRAP_SERVERS}" \
+#     --alter \
+#     --topic "${TOPIC_ID}" \
+#     --add-config "retention.ms=${RETENTION_MS}, segment.ms=${SEGMENT_MS}"

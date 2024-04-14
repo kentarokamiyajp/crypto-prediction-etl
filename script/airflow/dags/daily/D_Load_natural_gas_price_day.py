@@ -49,7 +49,9 @@ def _get_natural_gas_price(load_from_days):
 
     logger.info("Load from {} to {}".format(from_date, to_date))
 
-    return yahoofinancials_operation.get_data_from_yahoofinancials(symbols, interval, from_date, to_date)
+    return yahoofinancials_operation.get_data_from_yahoofinancials(
+        symbols, interval, from_date, to_date
+    )
 
 
 def _process_natural_gas_price(ti):
@@ -99,7 +101,9 @@ def _check_latest_dt():
     # If there is no data for prev-day even on the market holiday, exit with error.
     market = "NYSE"
     if int(count) == 0 and utils.is_market_open(prev_date, market):
-        warning_message = "There is no data for prev_date ({}, asset:{})".format(prev_date, target_index)
+        warning_message = "There is no data for prev_date ({}, asset:{})".format(
+            prev_date, target_index
+        )
         logger.warn(warning_message)
         _send_warning_notification(warning_message)
 
@@ -159,7 +163,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load Natural Gas price data",
-    schedule_interval="0 1 * * *",
+    schedule_interval="0 16 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -169,8 +173,8 @@ with DAG(
     default_args=args,
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
-    
-    days_delete_from = 7
+
+    days_delete_from = 10
 
     get_natural_gas_price = PythonOperator(
         task_id="get_natural_gas_price",
@@ -191,7 +195,9 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existence", python_callable=_check_latest_dt)
+    check_latest_dt = PythonOperator(
+        task_id="check_latest_dt_existence", python_callable=_check_latest_dt
+    )
 
     from airflow_modules import airflow_env_variables
 

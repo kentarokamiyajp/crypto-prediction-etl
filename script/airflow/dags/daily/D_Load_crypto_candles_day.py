@@ -104,7 +104,9 @@ def _check_latest_dt():
 
     # If there is no data for prev-day, exit with error.
     if int(count) == 0:
-        warning_message = "There is no data for prev_date ({}, asset:{})".format(prev_date, target_asset)
+        warning_message = "There is no data for prev_date ({}, asset:{})".format(
+            prev_date, target_asset
+        )
         logger.warn(warning_message)
         _send_warning_notification(warning_message)
 
@@ -164,7 +166,7 @@ args = {"owner": "airflow", "retries": 3, "retry_delay": timedelta(minutes=10)}
 with DAG(
     dag_id,
     description="Load candles day data",
-    schedule_interval="0 1 * * *",
+    schedule_interval="0 16 * * 5",
     start_date=datetime(2023, 1, 1),
     catchup=False,
     on_failure_callback=_task_failure_alert,
@@ -175,7 +177,7 @@ with DAG(
 ) as dag:
     dag_start = DummyOperator(task_id="dag_start")
 
-    days_delete_from = 7
+    days_delete_from = 10
 
     get_candle_data = PythonOperator(
         task_id="get_candle_day",
@@ -196,7 +198,9 @@ with DAG(
         python_callable=_insert_data_to_cassandra,
     )
 
-    check_latest_dt = PythonOperator(task_id="check_latest_dt_existence", python_callable=_check_latest_dt)
+    check_latest_dt = PythonOperator(
+        task_id="check_latest_dt_existence", python_callable=_check_latest_dt
+    )
 
     from airflow_modules import airflow_env_variables
 

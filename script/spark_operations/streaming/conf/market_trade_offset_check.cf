@@ -1,0 +1,2 @@
+SPARK_STREAM="crypto.market_trade_realtime"
+KAFKA_TOPIC="crypto.market_trade"

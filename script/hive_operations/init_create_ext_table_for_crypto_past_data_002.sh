@@ -22,12 +22,12 @@ fi
 . $DEFAULT_CONF
 
 if [ ! -d "$HIVECL_LOG_DIR" ]; then
-    mkdir $HIVECL_LOG_DIR
+    mkdir -p $HIVECL_LOG_DIR
 fi
 
 SUB_LOG_DIR=$HIVECL_LOG_DIR/$(date +'%m%d%Y')
 if [ ! -d "$SUB_LOG_DIR" ]; then
-    mkdir $SUB_LOG_DIR
+    mkdir -p $SUB_LOG_DIR
 fi
 
 LOG_MAIN_NAME="init_create_ext_table_for_crypto_past_data_002"
