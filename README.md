@@ -1,4 +1,4 @@
-# Data Warehouse Architecture for Crypto Price Prediction (DWH)
+# ETL for Crypto Price Prediction
 ![image](https://github.com/kamikennn/crypto-prediction-dwh/assets/45506894/31ebd4d5-1fa3-4ee7-9a16-bcae99faffd0)
 ## System Overview
 - https://miro.com/app/board/uXjVMgqA6r8=/?share_link_id=394438367657
