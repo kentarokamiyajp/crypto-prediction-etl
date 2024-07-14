@@ -20,7 +20,6 @@ fi
 
 . "${DEFAULT_CONF}"
 
-
 ##############################
 # Activate python venv
 ##############################
@@ -36,12 +35,11 @@ if [ ${exec_status} != 0 ]; then
     exit 1
 fi
 
-
-profile_dir=/home/git/crypto_prediction_dwh/modules/dbt/crypto_etl_pjr
+profile_dir=/home/git/crypto-prediction-etl/modules/dbt/crypto_etl_pjr
 target="dev"
 profile="crypto_mart"
 log_file="target/dbt_serve.out"
 
-nohup dbt docs serve --profiles-dir ${profile_dir} --target ${target} --profile ${profile} > ${log_file} 2>&1 &
+nohup dbt docs serve --profiles-dir ${profile_dir} --target ${target} --profile ${profile} >${log_file} 2>&1 &
 
 # Access to localhost:8989 (port is fowarded from 8080 to 8989)

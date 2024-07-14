@@ -37,7 +37,7 @@ with DAG(
         port=env_variables.BATCH_HOST_SSH_PORT,
     )
 
-    spark_stream_home = "/home/batch/git/crypto_prediction_dwh/modules/spark_operations/streaming"
+    spark_stream_home = "/home/batch/git/crypto-prediction-etl/modules/spark_operations/streaming"
 
     base_command = f"export KAFKA_HOME=/home/{env_variables.BATCH_USER}/kafka && \
                     export HADOOP_HOME=/home/{env_variables.BATCH_USER}/hadoop-3.3.6 && \

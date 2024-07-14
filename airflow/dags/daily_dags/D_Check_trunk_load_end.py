@@ -73,9 +73,9 @@ with DAG(
             **default_task_sensor_args,
         )
 
-        wait_for_D_Load_stock_index_value_day = ExternalTaskSensor(
-            task_id="wait_for_D_Load_stock_index_value_day",
-            external_dag_id="D_Load_stock_index_value_day",
+        wait_for_D_Load_stock_index_day = ExternalTaskSensor(
+            task_id="wait_for_D_Load_stock_index_day",
+            external_dag_id="D_Load_stock_index_day",
             external_task_id="dag_end",
             execution_delta=timedelta(minutes=10),
             **default_task_sensor_args,
@@ -87,7 +87,7 @@ with DAG(
             wait_for_D_Load_forex_rate_day,
             wait_for_D_Load_gold_price_day,
             wait_for_D_Load_natural_gas_price_day,
-            wait_for_D_Load_stock_index_value_day,
+            wait_for_D_Load_stock_index_day,
         ]
 
     dag_end = DummyOperator(task_id="dag_end")
