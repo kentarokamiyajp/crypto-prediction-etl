@@ -7,7 +7,7 @@
 . /home/venvs/dbt_env/bin/activate
 
 # Set variables
-profile_dir=/home/git/crypto_prediction_dwh/modules/dbt/crypto_etl_pjr
+profile_dir=/home/git/crypto-prediction-etl/modules/dbt/crypto_etl_pjr
 
 # install
 dbt deps --profiles-dir ${profile_dir}

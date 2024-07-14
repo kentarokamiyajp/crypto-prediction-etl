@@ -41,7 +41,7 @@ with DAG(
                     export PATH=$PATH:$KAFKA_HOME/bin:$HADOOP_HOME/bin:$JAVA_HOME/bin && \
                     . /home/{env_variables.BATCH_USER}/pyvenv/bin/activate"
 
-    spark_stream_home = "/home/batch/git/crypto_prediction_dwh/modules/spark_operations/streaming"
+    spark_stream_home = "/home/batch/git/crypto-prediction-etl/modules/spark_operations/streaming"
 
     stop_candles_minute_consumer = SSHOperator(
         task_id="spark_stream_crypto_candles",

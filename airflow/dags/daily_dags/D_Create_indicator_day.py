@@ -62,7 +62,7 @@ with DAG(
         context=context, dag_id=DAG_ID, tags=TAGS, type="ERROR"
     ),
     catchup=False,
-    concurrency=1,  # can run N tasks at the same time
+    concurrency=5,  # can run N tasks at the same time
     max_active_runs=1,  # can run N DAGs at the same time
     default_args=default_args,
 ) as dag:
