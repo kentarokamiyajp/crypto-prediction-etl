@@ -1,4 +1,5 @@
 todo.md
+venv
 script/*/__pycache__
 script/*/*/__pycache__
 script/*/*/*/__pycache__

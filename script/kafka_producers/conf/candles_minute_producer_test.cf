@@ -1,0 +1,13 @@
+# Producer config
+NUM_PARTITIONS=3
+REPLICATION_FOCTOR=1
+RETENTION_DAYS=1
+CLEANUP_POLICY=delete
+TOPIC_ID="crypto.candles_minute_test"
+
+# Candle data config
+# Target symbols
+SYMBOLS="BTC_USDT,ETH_USDT"
+
+# Set max retry count for websocket function
+RETRY_COUNT=5

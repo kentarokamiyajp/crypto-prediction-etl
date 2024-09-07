@@ -1,0 +1,5 @@
+# Kafka Consumer config
+TOPIC_ID="crypto.realtime_trading_bot_v1"
+GROUP_ID=""
+OFFSET_TYPE="latest"
+RETRY_COUNT=10000

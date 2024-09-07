@@ -1,7 +1,12 @@
+"""
+confluent_kafka:
+    https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#pythonclient-consumer
+"""
+
 import os, sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, KafkaException, TopicPartition
 from common import env_variables
 import logging
 
@@ -14,6 +19,7 @@ class KafkaConsumer:
         consumer_id: str,
         group_id: str,
         offset_type: str,
+        _logdir: str = None,
     ):
         self.kafka_conf = {
             "bootstrap.servers": env_variables.KAFKA_BOOTSTRAP_SERVERS,
@@ -25,7 +31,11 @@ class KafkaConsumer:
         self.consumer = Consumer(self.kafka_conf)
 
         # set logging
-        logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
+        if _logdir == None:
+            logdir = "{}/{}".format(env_variables.KAFKA_LOG_HOME, curr_date)
+        else:
+            logdir = _logdir
+            
         logging.basicConfig(
             format="%(asctime)s %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
@@ -43,3 +53,14 @@ class KafkaConsumer:
 
     def close(self):
         self.consumer.close()
+
+    def get_partitions(self, topic):
+        # Get the topic's partitions
+        metadata = self.consumer.list_topics(topic, timeout=10)
+        if metadata.topics[topic].error is not None:
+            raise KafkaException(metadata.topics[topic].error)
+
+        # Construct TopicPartition list of partitions to query
+        partitions = [TopicPartition(topic, p) for p in metadata.topics[topic].partitions]
+
+        return partitions

@@ -1,0 +1,5 @@
+# Kafka Consumer config
+TOPIC_ID="crypto.candles_minute_test_v2"
+GROUP_ID=""
+OFFSET_TYPE="earliest"
+RETRY_COUNT=10000

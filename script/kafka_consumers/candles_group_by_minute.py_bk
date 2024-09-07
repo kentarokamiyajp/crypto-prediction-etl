@@ -1,0 +1,185 @@
+"""
+1. Consume topic from the existing topic 'crypto.candles_minute'
+2. Aggregation by grouping by "minute"
+3. Produce the aggregated data to a new topic
+"""
+
+import os, sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import json
+import time
+import traceback
+import pytz
+from consumer_operation import KafkaConsumer
+from dotenv import load_dotenv
+from datetime import datetime, timezone, date
+from common import utils
+from pprint import pprint
+from kafka_producers.KafkaBaseProducer import KafkaBaseProducer
+
+CONF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "conf")
+
+# set the timezone to US/Pacific
+os.environ["TZ"] = "Asia/Tokyo"
+time.tzset()
+TZ_JST = pytz.timezone("Asia/Tokyo")
+
+
+def consume_realtime_data(curr_date, curr_timestamp, consumer_id):
+
+    # Kafka config
+    topic_id = os.environ.get("TOPIC_ID")
+    group_id = os.environ.get("GROUP_ID")
+    offset_type = os.environ.get("OFFSET_TYPE")
+
+    # Create consumer
+    consumer = KafkaConsumer(curr_date, curr_timestamp, consumer_id, group_id, offset_type)
+
+    # Create producer
+    producer = KafkaBaseProducer()
+
+    # Get the topic's partitions
+    partitions = consumer.get_partitions(topic_id)
+    num_partitions = len(partitions)
+
+    # init variables
+    latest_minute = {}
+    latest_minute_data = {}
+    prev_candle_close_ts_ymdhm = {}
+
+    consumer.subscribe([topic_id])
+
+    consumer.logger.info("Start to consume")
+    while True:
+        msg = consumer.poll(10.0)
+
+        if msg is None:
+            continue
+
+        if msg.error():
+            consumer.logger.error("Consumer error: {}".format(msg.error()))
+            sys.exit(1)
+
+        consumed_data = json.loads(msg.value().decode("utf-8"))
+        crypto_id = consumed_data["data"][0]["id"]
+
+        # Focus on only BTC
+        if crypto_id != "BTC_USDT":
+            continue
+
+        # init latest_minute (only one time operation)
+        if crypto_id not in latest_minute:
+            latest_minute[crypto_id] = {}
+            latest_minute_data[crypto_id] = {}
+
+        this_msg_partition = msg.partition()
+        this_candle_close_ts_ymdhm = datetime.utcfromtimestamp(
+            int(consumed_data["data"][0]["ts_send"])
+        ).strftime("%Y-%m-%d %H:%M")
+        this_candle_close_ts_ymdhms = datetime.utcfromtimestamp(
+            int(consumed_data["data"][0]["ts_send"])
+        ).strftime("%Y-%m-%d %H:%M:%S")
+
+        print(
+            f"{crypto_id}: timestamp for the latest data -> {this_candle_close_ts_ymdhms} (partition: {this_msg_partition})"
+        )
+
+        # init
+        if latest_minute[crypto_id] == {} or (
+            prev_candle_close_ts_ymdhm.get(crypto_id, "2099-01-01 00:00")
+            in latest_minute[crypto_id]
+            and this_candle_close_ts_ymdhm not in latest_minute[crypto_id]
+        ):
+            latest_minute[crypto_id][this_candle_close_ts_ymdhm] = set()
+
+        ########################
+        # MAIN PART
+        ########################
+        # Publish candle data to kafka topic if it meets the following conditions
+        # if (
+        #     prev_candle_close_ts_ymdhm.get(crypto_id, "2099-01-01 00:00")
+        #     in latest_minute[crypto_id]
+        #     and len(
+        #         latest_minute[crypto_id][
+        #             prev_candle_close_ts_ymdhm.get(crypto_id, "2099-01-01 00:00")
+        #         ]
+        #     )
+        #     == num_partitions
+        #     and prev_candle_close_ts_ymdhm.get(crypto_id, "2099-01-01 00:00")
+        #     < this_candle_close_ts_ymdhm
+        # ):
+        if (
+            prev_candle_close_ts_ymdhm.get(crypto_id, "2099-01-01 00:00")
+            < this_candle_close_ts_ymdhm
+        ):
+            # fetched all of data in a minute (MM:00~MM:59)
+            # so push the latest data (MM:59) to a topic
+
+            base_message = latest_minute_data[crypto_id]["latest_data"]["data"][0]
+            ts_create_utc = datetime.utcfromtimestamp(int(base_message["closeTime"]))
+
+            # OHLC data
+            message = {
+                "open": base_message["open"],
+                "high": base_message["high"],
+                "low": base_message["low"],
+                "close": base_message["close"],
+                "ts_create_utc": str(ts_create_utc),
+            }
+
+            print()
+            print(base_message["id"])
+            print(message)
+            print()
+
+            # Publish the message
+            produce_minute_data(producer, message, key=base_message["id"])
+
+            # init again for next the minute data
+            latest_minute[crypto_id] = {}
+            latest_minute_data[crypto_id] = {
+                "ts": this_candle_close_ts_ymdhms,
+                "latest_data": consumed_data,
+            }
+
+        else:
+            if ("ts" not in latest_minute_data[crypto_id]) or (
+                latest_minute_data[crypto_id]["ts"] < this_candle_close_ts_ymdhms
+            ):
+                latest_minute_data[crypto_id] = {
+                    "ts": this_candle_close_ts_ymdhms,
+                    "latest_data": consumed_data,
+                }
+
+            latest_minute[crypto_id][this_candle_close_ts_ymdhm].add(this_msg_partition)
+
+        prev_candle_close_ts_ymdhm[crypto_id] = this_candle_close_ts_ymdhm
+
+
+def produce_minute_data(producer, message, key):
+
+    topic_name = "crypto.candles_minute_test_2"
+    num_partitions = 3
+
+    producer.produce_message(topic_name, json.dumps(message), num_partitions, key=key)
+    producer.poll_message(timeout=10)
+
+
+def main():
+    # Get arguments
+    args = sys.argv
+    curr_date = args[1]
+    curr_timestamp = args[2]
+    consumer_id = args[3]
+
+    # Load variables from conf file
+    load_dotenv(verbose=True)
+    conf_file = os.path.join(CONF_DIR, f"{consumer_id}.cf")
+    load_dotenv(conf_file)
+
+    consume_realtime_data(curr_date, curr_timestamp, consumer_id)
+
+
+if __name__ == "__main__":
+    main()
