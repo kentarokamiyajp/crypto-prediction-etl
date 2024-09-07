@@ -58,7 +58,7 @@ with DAG(
         op_kwargs={
             "dag_id": DAG_ID,
             "tags": TAGS,
-            "type": "WARNING",
+            "type": "INFO",
             "optional_message": "All Daily Create Dags Completed !!!",
         },
     )
