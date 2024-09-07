@@ -3,7 +3,7 @@ from pyspark.sql.functions import col
 from pyspark.sql.types import *
 import pandas as pd
 
-SPARK_CONFIG = {"spark.cores.max": "2", "spark.executor.cores": "2", "spark.executor.memory": "5g"}
+SPARK_CONFIG = {"spark.cores.max": "1", "spark.executor.cores": "1", "spark.executor.memory": "5g"}
 
 HIVE_CONFIG = {
     "source_schema": "stock_raw",
